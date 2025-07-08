@@ -129,8 +129,8 @@ src/
 
 ### **1. 저장소 클론**
 ```bash
-git clone https://github.com/your-username/bemore-backend.git
-cd bemore-backend
+git clone https://github.com/BeMore-CapstoneDesign/bemoreBackend.git
+cd bemoreBackend
 ```
 
 ### **2. 의존성 설치**
@@ -303,7 +303,7 @@ test/
 
 ## 📞 **지원**
 
-- **이슈 리포트**: [GitHub Issues](https://github.com/your-username/bemore-backend/issues)
+- **이슈 리포트**: [GitHub Issues](https://github.com/BeMore-CapstoneDesign/bemoreBackend/issues)
 - **문서**: [API Documentation](./API_DOCUMENTATION.md)
 - **아키텍처**: [Architecture Guide](./ARCHITECTURE.md)
 
@@ -325,9 +325,9 @@ test/
 
 **BeMore Backend** - 멀티모달 감정 분석 & CBT 피드백 API 서버
 
-[![GitHub stars](https://img.shields.io/github/stars/your-username/bemore-backend?style=social)](https://github.com/your-username/bemore-backend/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/your-username/bemore-backend?style=social)](https://github.com/your-username/bemore-backend/network)
-[![GitHub issues](https://img.shields.io/github/issues/your-username/bemore-backend)](https://github.com/your-username/bemore-backend/issues)
-[![GitHub license](https://img.shields.io/github/license/your-username/bemore-backend)](https://github.com/your-username/bemore-backend/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/BeMore-CapstoneDesign/bemoreBackend?style=social)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/BeMore-CapstoneDesign/bemoreBackend?style=social)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/network)
+[![GitHub issues](https://img.shields.io/github/issues/BeMore-CapstoneDesign/bemoreBackend)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/issues)
+[![GitHub license](https://img.shields.io/github/license/BeMore-CapstoneDesign/bemoreBackend)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/blob/main/LICENSE)
 
 </div>
