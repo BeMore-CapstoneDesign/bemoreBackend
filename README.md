@@ -9,17 +9,18 @@ BeMore는 Google Gemini AI를 활용하여 사용자의 감정을 분석하고, 
 ## ✨ 주요 기능
 
 - **멀티모달 감정 분석**: 텍스트, 오디오, 이미지 기반 감정 분석
-- **AI 상담사**: Gemini AI를 활용한 CBT 기반 상담
+- **AI 상담사**: Gemini 2.5-flash AI를 활용한 CBT 기반 상담
 - **세션 관리**: 대화 세션 생성 및 관리
 - **히스토리 조회**: 과거 분석 결과 및 대화 기록 조회
 - **PDF 리포트**: 세션별 상세 리포트 생성
 - **PostgreSQL 연동**: 안정적인 데이터 저장 및 관리
+- **Mock 응답 지원**: API 키 없이도 개발 환경에서 테스트 가능
 
 ## 🛠 기술 스택
 
 - **Framework**: NestJS
 - **Database**: PostgreSQL + Prisma
-- **AI**: Google Gemini API
+- **AI**: Google Gemini 2.5-flash API
 - **Language**: TypeScript
 - **Validation**: class-validator, class-transformer
 - **Authentication**: JWT (준비 중)
@@ -49,13 +50,13 @@ BeMore는 Google Gemini AI를 활용하여 사용자의 감정을 분석하고, 
 
 - Node.js 18+
 - PostgreSQL 12+
-- Google Gemini API 키
+- Google Gemini API 키 (선택사항 - Mock 응답 지원)
 
 ### 설치
 
 1. **저장소 클론**
 ```bash
-git clone <repository-url>
+git clone https://github.com/BeMore-CapstoneDesign/bemoreBackend.git
 cd bemore-backend
 ```
 
@@ -72,13 +73,13 @@ cp env.example .env
 `.env` 파일을 편집하여 다음 정보를 입력하세요:
 ```env
 # Database
-DATABASE_URL="postgresql://myuser:mypassword@localhost:5432/mydb"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/bemore"
 
-# Gemini API
+# Gemini API (선택사항 - 없으면 Mock 응답 사용)
 GEMINI_API_KEY="your-gemini-api-key"
 
 # JWT
-JWT_SECRET="your-jwt-secret"
+JWT_SECRET="your-jwt-secret-key-for-development"
 
 # Server
 PORT=3000
@@ -93,10 +94,8 @@ UPLOAD_DEST="./uploads"
 # PostgreSQL에 접속
 psql -U postgres
 
-# 데이터베이스 및 사용자 생성
-CREATE DATABASE mydb;
-CREATE USER myuser WITH PASSWORD 'mypassword';
-GRANT ALL PRIVILEGES ON DATABASE mydb TO myuser;
+# 데이터베이스 생성
+CREATE DATABASE bemore;
 \q
 ```
 
@@ -186,10 +185,15 @@ curl -X GET http://localhost:3000/api/test/db-connection
 # 사용자 목록 조회
 curl -X GET http://localhost:3000/api/test/users
 
-# AI 채팅 테스트
+# AI 채팅 테스트 (Mock 응답)
 curl -X POST http://localhost:3000/api/chat/gemini \
   -H "Content-Type: application/json" \
-  -d '{"message": "안녕하세요", "emotionContext": {"currentEmotion": "평온"}}'
+  -d '{"message": "안녕하세요"}'
+
+# 감정 분석 테스트
+curl -X POST http://localhost:3000/api/emotion/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "오늘 기분이 좋아요", "mediaType": "text"}'
 ```
 
 ### 단위 테스트
@@ -210,7 +214,7 @@ npm run test:cov
 | 변수명 | 설명 | 기본값 | 필수 |
 |--------|------|--------|------|
 | `DATABASE_URL` | PostgreSQL 연결 문자열 | - | ✅ |
-| `GEMINI_API_KEY` | Google Gemini API 키 | - | ✅ |
+| `GEMINI_API_KEY` | Google Gemini API 키 | - | ❌ (Mock 응답 지원) |
 | `JWT_SECRET` | JWT 시크릿 키 | - | ✅ |
 | `PORT` | 서버 포트 | 3000 | ❌ |
 | `MAX_FILE_SIZE` | 최대 파일 크기 (bytes) | 10485760 | ❌ |
@@ -241,6 +245,21 @@ docker run -p 3000:3000 bemore-backend
 - **테스트**: `.env.test`
 - **프로덕션**: `.env.production`
 
+## 🆕 최근 업데이트
+
+### v1.1.0 (2025-07-15)
+- ✅ **런타임 에러 해결**: Foreign key constraint 및 DB 세션 로직 수정
+- ✅ **Gemini 2.5-flash 모델**: 최신 AI 모델로 업그레이드
+- ✅ **Mock 응답 지원**: API 키 없이도 개발 환경에서 테스트 가능
+- ✅ **PostgreSQL 연동**: 안정적인 데이터베이스 연결 및 스키마 관리
+- ✅ **API 엔드포인트**: 채팅, 감정분석, 히스토리 API 정상 작동
+
+### 개발 상태
+- 🟢 **백엔드 API**: 완료 및 테스트 완료
+- 🟡 **프론트엔드 연동**: 진행 중
+- 🟡 **실제 Gemini API**: 테스트 필요
+- 🔴 **배포 자동화**: 준비 중
+
 ## 🤝 기여하기
 
 1. Fork the Project
@@ -249,43 +268,6 @@ docker run -p 3000:3000 bemore-backend
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 라이선스
+## 📞 문의
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
-
-## 📞 지원
-
-프로젝트 관련 문의사항이나 버그 리포트는 GitHub Issues를 통해 제출해 주세요.
-
-## 🔮 향후 계획
-
-- [x] PostgreSQL 데이터베이스 연동
-- [x] NestJS API 엔드포인트 구현
-- [x] Gemini AI 연동
-- [x] 기본 CRUD 기능
-- [ ] JWT 기반 사용자 인증 시스템
-- [ ] 오디오/이미지 파일 업로드 처리
-- [ ] 실제 PDF 라이브러리를 사용한 리포트 생성
-- [ ] Redis를 통한 캐싱 시스템
-- [ ] 구조화된 로깅 시스템
-- [ ] 단위 테스트 및 통합 테스트 추가
-- [ ] Docker 컨테이너화
-- [ ] CI/CD 파이프라인 구축
-- [ ] API 문서 자동화 (Swagger)
-- [ ] 성능 모니터링 및 최적화
-
-## 📊 프로젝트 상태
-
-- **개발 진행률**: 70%
-- **API 완성도**: 80%
-- **테스트 커버리지**: 30%
-- **문서화**: 90%
-
----
-
-**BeMore Backend** - AI 기반 감정 분석 & CBT 피드백 API 서버
-
-[![GitHub stars](https://img.shields.io/github/stars/BeMore-CapstoneDesign/bemoreBackend?style=social)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/BeMore-CapstoneDesign/bemoreBackend?style=social)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/network)
-[![GitHub issues](https://img.shields.io/github/issues/BeMore-CapstoneDesign/bemoreBackend)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/issues)
-[![GitHub license](https://img.shields.io/github/license/BeMore-CapstoneDesign/bemoreBackend)](https://github.com/BeMore-CapstoneDesign/bemoreBackend/blob/main/LICENSE)
+프로젝트 관련 문의사항이 있으시면 이슈를 생성해 주세요.
