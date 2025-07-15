@@ -14,17 +14,29 @@ export class ChatService {
 
   async processChatMessage(request: ChatRequestDto, userId: string): Promise<ChatResponseDto> {
     try {
-      // 세션 생성 또는 기존 세션 사용
-      let sessionId = request.sessionId;
-      if (!sessionId) {
-        const session = await this.prisma.session.create({
+      // 먼저 사용자가 존재하는지 확인하고, 없으면 생성
+      let user = await this.prisma.user.findUnique({
+        where: { id: userId }
+      });
+      
+      if (!user) {
+        user = await this.prisma.user.create({
           data: {
-            userId,
-            startTime: new Date(),
-          },
+            id: userId,
+            email: `${userId}@temp.com`,
+            name: '임시 사용자'
+          }
         });
-        sessionId = session.id;
       }
+      
+      // 항상 새로운 세션 생성 (기존 sessionId 무시)
+      const session = await this.prisma.session.create({
+        data: {
+          userId: user.id,
+        },
+      });
+      
+      const sessionId = session.id;
 
       // 사용자 메시지 저장
       const userMessage = await this.prisma.message.create({
@@ -80,7 +92,12 @@ export class ChatService {
       };
     } catch (error) {
       this.logger.error('Error processing chat message:', error);
-      throw new Error('Failed to process chat message');
+      this.logger.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      throw new Error(`Failed to process chat message: ${error.message}`);
     }
   }
 

@@ -2,7 +2,7 @@ import { Controller, Post, Body, HttpStatus, HttpException } from '@nestjs/commo
 import { EmotionService } from './emotion.service';
 import { EmotionAnalysisRequestDto, EmotionAnalysisResponseDto } from '../dto/emotion.dto';
 
-@Controller('api/emotion')
+@Controller('emotion')
 export class EmotionController {
   constructor(private readonly emotionService: EmotionService) {}
 

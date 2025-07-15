@@ -1,9 +1,11 @@
-import { Controller, Post, Body, UseGuards, Request, HttpStatus, HttpException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, HttpStatus, HttpException, Logger } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatRequestDto, ChatResponseDto } from '../dto/chat.dto';
 
-@Controller('api/chat')
+@Controller('chat')
 export class ChatController {
+  private readonly logger = new Logger(ChatController.name);
+  
   constructor(private readonly chatService: ChatService) {}
 
   @Post('gemini')
@@ -18,6 +20,7 @@ export class ChatController {
       const response = await this.chatService.processChatMessage(chatRequestDto, userId);
       return response;
     } catch (error) {
+      this.logger.error('Chat error:', error);
       throw new HttpException(
         {
           success: false,

@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { HistoryService } from './history.service';
 import { HistoryResponseDto } from '../dto/history.dto';
 
-@Controller('api/history')
+@Controller('history')
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 

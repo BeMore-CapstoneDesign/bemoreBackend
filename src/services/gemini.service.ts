@@ -5,21 +5,35 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 @Injectable()
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenerativeAI | null;
   private model: any;
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not configured');
+    if (!apiKey || apiKey === 'your-gemini-api-key') {
+      this.logger.warn('GEMINI_API_KEY is not configured, using mock responses');
+      this.genAI = null;
+      this.model = null;
+    } else {
+      this.genAI = new GoogleGenerativeAI(apiKey);
+      this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     }
-    
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
   }
 
   async analyzeEmotion(content: string, mediaType: 'text' | 'audio' | 'image'): Promise<any> {
     try {
+      if (!this.model) {
+        // Mock response when API key is not configured
+        return {
+          primaryEmotion: '중립',
+          secondaryEmotions: ['호기심'],
+          confidence: 0.8,
+          intensity: 0.6,
+          analysis: '사용자의 메시지를 분석한 결과, 전반적으로 중립적인 감정 상태로 보입니다.',
+          cbtSuggestions: ['심호흡 기법', '마음챙김 명상', '긍정적 사고 전환']
+        };
+      }
+
       const prompt = this.buildEmotionAnalysisPrompt(content, mediaType);
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
@@ -34,6 +48,18 @@ export class GeminiService {
 
   async generateChatResponse(message: string, context?: any): Promise<any> {
     try {
+      if (!this.model) {
+        // Mock response when API key is not configured
+        return {
+          content: `안녕하세요! ${message}에 대해 말씀해주셨네요. 현재 상황을 더 자세히 설명해주시면, 적절한 CBT 기법을 제안해드릴 수 있습니다. 어떤 부분에서 도움이 필요하신가요?`,
+          emotionAnalysis: {
+            primaryEmotion: '중립',
+            confidence: 0.7,
+            suggestions: ['심호흡 기법', '마음챙김 명상', '인지 재구성']
+          }
+        };
+      }
+
       const prompt = this.buildChatPrompt(message, context);
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
