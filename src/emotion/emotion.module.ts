@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { EmotionController } from './emotion.controller';
 import { EmotionService } from './emotion.service';
+import { GeminiService } from '../services/gemini.service';
 
 @Module({
-  imports: [ConfigModule],
   controllers: [EmotionController],
-  providers: [EmotionService],
+  providers: [EmotionService, GeminiService],
   exports: [EmotionService],
 })
 export class EmotionModule {} 

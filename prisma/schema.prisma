@@ -11,45 +11,34 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  // Relations
-  sessions Session[]
-  messages Message[]
-
-  @@map("users")
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions  Session[]
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  date      DateTime @default(now())
-  vad       Json     // VAD 분석 결과 (valence, arousal, dominance)
-  summary   String?  // 세션 요약
-  pdfUrl    String?  // PDF 리포트 URL
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  messageCount Int     @default(0)
+  emotionTrends Json?
+  summary     String?
+  messages    Message[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  userId    String
-  content   String
-  role      String   // 'user' | 'assistant'
-  createdAt DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("messages")
+  id            String   @id @default(cuid())
+  sessionId     String
+  session       Session  @relation(fields: [sessionId], references: [id])
+  content       String
+  role          String   // "user" | "assistant"
+  timestamp     DateTime @default(now())
+  emotionAnalysis Json?
 } 

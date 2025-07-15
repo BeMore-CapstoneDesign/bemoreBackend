@@ -1,38 +1,25 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MulterModule } from '@nestjs/multer';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
-import { EmotionModule } from './emotion/emotion.module';
+import { PrismaModule } from './prisma/prisma.module';
 import { ChatModule } from './chat/chat.module';
+import { EmotionModule } from './emotion/emotion.module';
 import { HistoryModule } from './history/history.module';
-import { PrismaService } from './common/services/prisma.service';
+import { TestModule } from './test/test.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
     }),
-    MulterModule.register({
-      dest: './uploads',
-      limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB
-      },
-    }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
-    }),
-    UserModule,
-    EmotionModule,
+    PrismaModule,
     ChatModule,
+    EmotionModule,
     HistoryModule,
+    TestModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -1,30 +1,50 @@
-import { Controller, Get, Param, UseGuards, Request, Post } from '@nestjs/common';
+import { Controller, Get, Post, Param, Res, HttpStatus, HttpException } from '@nestjs/common';
+import { Response } from 'express';
 import { HistoryService } from './history.service';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { HistoryResponseDto } from '../dto/history.dto';
 
 @Controller('api/history')
 export class HistoryController {
   constructor(private readonly historyService: HistoryService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get(':userId')
-  async getUserHistory(@Param('userId') userId: string, @Request() req) {
-    // 사용자 본인의 히스토리만 조회 가능
-    if (req.user.userId !== userId) {
-      throw new Error('권한이 없습니다.');
+  async getUserHistory(@Param('userId') userId: string): Promise<HistoryResponseDto> {
+    try {
+      return await this.historyService.getUserSessions(userId);
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          message: error.message || '히스토리 조회 중 오류가 발생했습니다.',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-    return this.historyService.getUserHistory(userId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('session/:sessionId')
-  async getSessionById(@Param('sessionId') sessionId: string, @Request() req) {
-    return this.historyService.getSessionById(sessionId, req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Post('session/:sessionId/pdf')
-  async generatePDF(@Param('sessionId') sessionId: string, @Request() req) {
-    return this.historyService.generatePDF(sessionId, req.user.userId);
+  async generateSessionPdf(
+    @Param('sessionId') sessionId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      const pdfBuffer = await this.historyService.generateSessionPdf(sessionId);
+      
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="session-${sessionId}.pdf"`,
+        'Content-Length': pdfBuffer.length,
+      });
+      
+      res.send(pdfBuffer);
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          message: error.message || 'PDF 생성 중 오류가 발생했습니다.',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 } 

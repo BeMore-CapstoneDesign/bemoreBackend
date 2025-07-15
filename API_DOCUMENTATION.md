@@ -1,350 +1,182 @@
 # BeMore Backend API Documentation
 
-## 📋 **API 개요**
+## 개요
+BeMore는 AI 기반 감정 분석 및 CBT 피드백 서비스의 백엔드 API입니다.
 
-BeMore 백엔드는 멀티모달 감정 분석과 CBT 피드백을 제공하는 RESTful API 서버입니다.
+## 기본 정보
+- **Base URL**: `http://localhost:3000/api`
+- **Content-Type**: `application/json`
+- **인증**: JWT 토큰 (향후 구현 예정)
 
-**Base URL**: `http://localhost:3000/api`
+## API 엔드포인트
 
-**인증**: JWT Bearer Token (대부분의 엔드포인트에서 필요)
+### 1. AI 채팅 API
 
----
+#### POST /chat/gemini
+Gemini AI와의 대화를 처리합니다.
 
-## 🔐 **인증**
-
-### **회원가입**
-```http
-POST /api/user/register
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "name": "홍길동"
-}
-```
-
-**응답**:
+**요청 본문:**
 ```json
 {
-  "id": "clx1234567890",
-  "email": "user@example.com",
-  "name": "홍길동",
-  "createdAt": "2024-01-01T00:00:00.000Z"
-}
-```
-
-### **로그인**
-```http
-POST /api/user/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
-
-**응답**:
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "clx1234567890",
-    "email": "user@example.com",
-    "name": "홍길동",
-    "createdAt": "2024-01-01T00:00:00.000Z"
+  "message": "사용자 메시지",
+  "sessionId": "세션 ID (선택사항)",
+  "emotionContext": {
+    "currentEmotion": "현재 감정 상태",
+    "emotionHistory": ["감정 히스토리"]
   }
 }
 ```
 
-### **프로필 조회**
-```http
-GET /api/user/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**응답**:
+**응답:**
 ```json
 {
-  "id": "clx1234567890",
-  "email": "user@example.com",
-  "name": "홍길동",
-  "createdAt": "2024-01-01T00:00:00.000Z"
-}
-```
-
----
-
-## 🧠 **감정 분석**
-
-### **멀티모달 감정 분석**
-```http
-POST /api/emotion/analyze
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
-
-{
-  "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ...",
-  "audio": "data:audio/wav;base64,UklGRnoGAABXQVZFZm10...",
-  "text": "오늘은 정말 힘든 하루였어요."
-}
-```
-
-**응답**:
-```json
-{
-  "vad": {
-    "valence": 0.3,
-    "arousal": 0.7,
-    "dominance": 0.2,
-    "confidence": 0.85
-  },
-  "summary": "사용자는 현재 부정적인 감정 상태에 있으며, 높은 긴장감을 보이고 있습니다.",
-  "cbtFeedback": "현재 부정적인 감정을 느끼고 계시는군요. 이런 감정이 자연스럽다는 것을 인정하고, 차분히 호흡을 가다듬어보세요. 긴장이나 흥분 상태에 계시는 것 같습니다. 깊은 호흡을 통해 몸을 이완시켜보세요. 현재 상황에 대한 통제감이 낮으신 것 같습니다. 할 수 있는 작은 것들부터 시작해보세요.",
-  "timestamp": "2024-01-01T12:00:00.000Z"
-}
-```
-
-**VAD 설명**:
-- **Valence (긍정성)**: 0.0 (매우 부정적) ~ 1.0 (매우 긍정적)
-- **Arousal (활성화)**: 0.0 (매우 차분함) ~ 1.0 (매우 흥분)
-- **Dominance (지배성)**: 0.0 (통제감 없음) ~ 1.0 (완전한 통제)
-- **Confidence (신뢰도)**: 0.0 (낮음) ~ 1.0 (높음)
-
----
-
-## 💬 **AI 채팅**
-
-### **Gemini AI 대화**
-```http
-POST /api/chat/gemini
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-Content-Type: application/json
-
-{
-  "message": "오늘 감정이 많이 복잡해요. 어떻게 하면 좋을까요?",
-  "history": [
-    {
-      "content": "안녕하세요!",
-      "role": "user"
-    },
-    {
-      "content": "안녕하세요! 어떤 도움이 필요하신가요?",
-      "role": "assistant"
-    }
-  ]
-}
-```
-
-**응답**:
-```json
-{
-  "message": "복잡한 감정을 느끼고 계시는군요. 이런 감정들이 자연스럽다는 것을 먼저 인정해보세요. 그리고 차분히 호흡을 가다듬으면서 현재 상황을 객관적으로 바라보는 시간을 가져보시는 건 어떨까요?",
-  "timestamp": "2024-01-01T12:00:00.000Z"
-}
-```
-
-### **채팅 히스토리 조회**
-```http
-GET /api/chat/history?limit=50
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**응답**:
-```json
-[
-  {
-    "id": "clx1234567890",
-    "userId": "clx1234567890",
-    "content": "오늘 감정이 많이 복잡해요.",
-    "role": "user",
-    "createdAt": "2024-01-01T12:00:00.000Z"
-  },
-  {
-    "id": "clx1234567891",
-    "userId": "clx1234567890",
-    "content": "복잡한 감정을 느끼고 계시는군요...",
+  "success": true,
+  "data": {
+    "id": "메시지 ID",
+    "content": "AI 응답 내용",
     "role": "assistant",
-    "createdAt": "2024-01-01T12:00:01.000Z"
+    "timestamp": "2024-01-01T00:00:00.000Z",
+    "sessionId": "세션 ID",
+    "emotionAnalysis": {
+      "primaryEmotion": "주요 감정",
+      "confidence": 0.95,
+      "suggestions": ["CBT 기법 제안"]
+    }
   }
-]
+}
 ```
 
----
+### 2. 감정 분석 API
 
-## 📊 **세션 히스토리**
+#### POST /emotion/analyze
+텍스트, 오디오, 이미지의 감정을 분석합니다.
 
-### **사용자 히스토리 조회**
-```http
-GET /api/history/{userId}
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**응답**:
-```json
-[
-  {
-    "id": "clx1234567890",
-    "date": "2024-01-01T12:00:00.000Z",
-    "vad": {
-      "valence": 0.3,
-      "arousal": 0.7,
-      "dominance": 0.2,
-      "confidence": 0.85
-    },
-    "summary": "사용자는 현재 부정적인 감정 상태에 있으며...",
-    "pdfUrl": "/reports/clx1234567890.pdf",
-    "createdAt": "2024-01-01T12:00:00.000Z"
-  }
-]
-```
-
-### **세션 상세 조회**
-```http
-GET /api/history/session/{sessionId}
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**응답**: (사용자 히스토리와 동일한 구조)
-
-### **PDF 리포트 생성**
-```http
-POST /api/history/session/{sessionId}/pdf
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-**응답**:
+**요청 본문:**
 ```json
 {
-  "pdfUrl": "/reports/clx1234567890.pdf"
+  "mediaType": "text",
+  "text": "분석할 텍스트 내용",
+  "sessionId": "세션 ID (선택사항)"
 }
 ```
 
----
+**미디어 타입:**
+- `text`: 텍스트 분석
+- `audio`: 오디오 분석 (향후 구현)
+- `image`: 이미지 분석 (향후 구현)
 
-## ⚠️ **에러 응답**
-
-### **일반적인 에러 형식**
+**응답:**
 ```json
 {
-  "statusCode": 400,
-  "message": "에러 메시지",
-  "error": "Bad Request",
-  "timestamp": "2024-01-01T12:00:00.000Z",
-  "path": "/api/emotion/analyze"
+  "success": true,
+  "data": {
+    "primaryEmotion": "주요 감정",
+    "secondaryEmotions": ["보조 감정들"],
+    "confidence": 0.95,
+    "intensity": 0.8,
+    "analysis": "감정 분석 결과 설명",
+    "cbtSuggestions": ["CBT 기법 제안들"],
+    "timestamp": "2024-01-01T00:00:00.000Z"
+  }
 }
 ```
 
-### **주요 에러 코드**
-- **400 Bad Request**: 잘못된 요청 데이터
-- **401 Unauthorized**: 인증 실패
-- **403 Forbidden**: 권한 없음
-- **404 Not Found**: 리소스를 찾을 수 없음
-- **409 Conflict**: 중복 데이터 (이메일 등)
-- **500 Internal Server Error**: 서버 내부 오류
+### 3. 세션 히스토리 조회 API
 
----
+#### GET /history/{userId}
+사용자의 세션 히스토리를 조회합니다.
 
-## 📝 **데이터 타입**
-
-### **VAD Result**
-```typescript
-interface VadResult {
-  valence: number;    // 0.0 ~ 1.0
-  arousal: number;    // 0.0 ~ 1.0
-  dominance: number;  // 0.0 ~ 1.0
-  confidence: number; // 0.0 ~ 1.0
+**응답:**
+```json
+{
+  "success": true,
+  "data": {
+    "sessions": [
+      {
+        "id": "세션 ID",
+        "startTime": "2024-01-01T00:00:00.000Z",
+        "endTime": "2024-01-01T01:00:00.000Z",
+        "messageCount": 10,
+        "emotionTrends": ["감정 변화 추이"],
+        "summary": "세션 요약"
+      }
+    ]
+  }
 }
 ```
 
-### **Emotion Analysis Result**
-```typescript
-interface EmotionAnalysisResult {
-  vad: VadResult;
-  summary: string;
-  cbtFeedback: string;
-  timestamp: Date;
+### 4. PDF 리포트 생성 API
+
+#### POST /history/session/{sessionId}/pdf
+특정 세션의 PDF 리포트를 생성합니다.
+
+**응답:**
+- Content-Type: `application/pdf`
+- 파일 다운로드
+
+## 에러 응답 형식
+
+```json
+{
+  "success": false,
+  "message": "에러 메시지"
 }
 ```
 
-### **Chat Message**
-```typescript
-interface ChatMessage {
-  content: string;
-  role: 'user' | 'assistant';
-}
-```
+## HTTP 상태 코드
 
-### **Session**
-```typescript
-interface Session {
-  id: string;
-  userId: string;
-  date: Date;
-  vad: VadResult;
-  summary?: string;
-  pdfUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
+- `200`: 성공
+- `400`: 잘못된 요청
+- `401`: 인증 실패
+- `404`: 리소스를 찾을 수 없음
+- `500`: 서버 내부 오류
 
----
+## 환경 변수
 
-## 🔧 **환경 설정**
-
-### **필수 환경 변수**
-```bash
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/bemore_db"
-
-# JWT
-JWT_SECRET="your-super-secret-jwt-key"
-JWT_EXPIRES_IN="7d"
-
-# Gemini AI
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/bemore"
 GEMINI_API_KEY="your-gemini-api-key"
-
-# Analysis Server
-ANALYSIS_SERVER_URL="http://localhost:8000"
-
-# File Upload
-MAX_FILE_SIZE=10485760 # 10MB
-UPLOAD_DEST="./uploads"
-
-# Server
+JWT_SECRET="your-jwt-secret"
 PORT=3000
-NODE_ENV="development"
 ```
 
----
+## 개발 및 실행
 
-## 🚀 **사용 예시**
-
-### **전체 워크플로우**
-1. **회원가입/로그인** → JWT 토큰 획득
-2. **감정 분석** → 이미지/오디오/텍스트 업로드
-3. **AI 채팅** → 감정 상태에 대한 상담
-4. **히스토리 조회** → 과거 분석 결과 확인
-5. **PDF 생성** → 리포트 다운로드
-
-### **cURL 예시**
+### 설치
 ```bash
-# 로그인
-curl -X POST http://localhost:3000/api/user/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}'
-
-# 감정 분석
-curl -X POST http://localhost:3000/api/emotion/analyze \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"text":"오늘은 정말 힘든 하루였어요."}'
+npm install
 ```
 
----
+### 데이터베이스 설정
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-## 📞 **지원**
+### 개발 서버 실행
+```bash
+npm run start:dev
+```
 
-API 관련 문의사항이나 버그 리포트는 프로젝트 이슈 트래커를 통해 제출해 주세요. 
+### 프로덕션 빌드
+```bash
+npm run build
+npm run start:prod
+```
+
+## 기술 스택
+
+- **Framework**: NestJS
+- **Database**: PostgreSQL + Prisma
+- **AI**: Google Gemini API
+- **Language**: TypeScript
+- **Validation**: class-validator, class-transformer
+
+## 향후 개선 사항
+
+1. **인증 시스템**: JWT 기반 사용자 인증
+2. **파일 업로드**: 오디오/이미지 파일 처리
+3. **PDF 생성**: 실제 PDF 라이브러리 사용
+4. **캐싱**: Redis를 통한 성능 최적화
+5. **로깅**: 구조화된 로깅 시스템
+6. **테스트**: 단위 테스트 및 통합 테스트 

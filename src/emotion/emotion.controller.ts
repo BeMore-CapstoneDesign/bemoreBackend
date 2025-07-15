@@ -1,23 +1,29 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, HttpException } from '@nestjs/common';
 import { EmotionService } from './emotion.service';
-import { EmotionAnalyzeDto } from '../common/dto/emotion-analyze.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { EmotionAnalysisRequestDto, EmotionAnalysisResponseDto } from '../dto/emotion.dto';
 
 @Controller('api/emotion')
 export class EmotionController {
   constructor(private readonly emotionService: EmotionService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('analyze')
   async analyzeEmotion(
-    @Body() emotionAnalyzeDto: EmotionAnalyzeDto,
-    @Request() req,
-  ) {
-    const result = await this.emotionService.analyzeEmotion(emotionAnalyzeDto);
-    
-    // TODO: 세션 저장 로직 추가
-    // await this.historyService.saveSession(req.user.userId, result);
-    
-    return result;
+    @Body() request: EmotionAnalysisRequestDto,
+  ): Promise<EmotionAnalysisResponseDto> {
+    try {
+      // 임시로 userId를 하드코딩 (실제로는 JWT 토큰에서 추출)
+      const userId = 'temp-user-id';
+
+      const response = await this.emotionService.analyzeEmotion(request, userId);
+      return response;
+    } catch (error) {
+      throw new HttpException(
+        {
+          success: false,
+          message: error.message || '감정 분석 중 오류가 발생했습니다.',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 } 
