@@ -71,54 +71,34 @@ export class MultimodalAnalysisService {
   }
 
   /**
-   * 통합 VAD 점수 계산
+   * 통합 VAD 점수 계산 (입력 조합별 정책 분기)
    */
   private calculateIntegratedVAD(
     facial?: FacialAnalysisResult,
     voice?: VoiceAnalysisResult,
     text?: TextAnalysisResult
   ): VADScore {
-    const weights = this.calculateModalityWeights(facial, voice, text);
-    
-    let totalValence = 0;
-    let totalArousal = 0;
-    let totalDominance = 0;
-    let totalWeight = 0;
-
-    // 얼굴 표정 분석 가중치 적용
-    if (facial) {
-      totalValence += facial.vadScore.valence * weights.facial;
-      totalArousal += facial.vadScore.arousal * weights.facial;
-      totalDominance += facial.vadScore.dominance * weights.facial;
-      totalWeight += weights.facial;
+    // 1. 얼굴 O / 음성 X
+    if (facial && !voice) {
+      return { ...facial.vadScore };
     }
-
-    // 음성 분석 가중치 적용
-    if (voice) {
-      totalValence += voice.vadScore.valence * weights.voice;
-      totalArousal += voice.vadScore.arousal * weights.voice;
-      totalDominance += voice.vadScore.dominance * weights.voice;
-      totalWeight += weights.voice;
-    }
-
-    // 텍스트 분석 가중치 적용
-    if (text) {
-      totalValence += text.vadScore.valence * weights.text;
-      totalArousal += text.vadScore.arousal * weights.text;
-      totalDominance += text.vadScore.dominance * weights.text;
-      totalWeight += weights.text;
-    }
-
-    // 가중 평균 계산
-    if (totalWeight > 0) {
+    // 2. 얼굴 O / 음성 O
+    if (facial && voice) {
       return {
-        valence: totalValence / totalWeight,
-        arousal: totalArousal / totalWeight,
-        dominance: totalDominance / totalWeight,
+        valence: facial.vadScore.valence * 0.6 + voice.vadScore.valence * 0.4,
+        arousal: facial.vadScore.arousal * 0.6 + voice.vadScore.arousal * 0.4,
+        dominance: facial.vadScore.dominance * 0.6 + voice.vadScore.dominance * 0.4,
       };
     }
-
-    // 기본값 반환
+    // 3. 얼굴 X / 음성 O
+    if (!facial && voice) {
+      return { ...voice.vadScore };
+    }
+    // (참고) 얼굴 X / 음성 X / 텍스트만 있는 경우는 기존 로직 유지
+    if (!facial && !voice && text) {
+      return { ...text.vadScore };
+    }
+    // 아무것도 없으면 중립값
     return { valence: 0.5, arousal: 0.5, dominance: 0.5 };
   }
 

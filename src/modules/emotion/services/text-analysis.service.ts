@@ -7,9 +7,12 @@ export class TextAnalysisService {
   private readonly emotionKeywords: { [key: string]: VADScore } = {
     // 긍정적 감정 키워드
     '기쁘': { valence: 0.9, arousal: 0.7, dominance: 0.8 },
+    '기쁨': { valence: 0.9, arousal: 0.7, dominance: 0.8 },
     '행복': { valence: 0.95, arousal: 0.6, dominance: 0.7 },
     '좋': { valence: 0.8, arousal: 0.5, dominance: 0.6 },
+    '좋아': { valence: 0.8, arousal: 0.5, dominance: 0.6 },
     '설레': { valence: 0.85, arousal: 0.8, dominance: 0.7 },
+    '설렘': { valence: 0.85, arousal: 0.8, dominance: 0.7 },
     '신나': { valence: 0.9, arousal: 0.9, dominance: 0.8 },
     '성공': { valence: 0.8, arousal: 0.7, dominance: 0.9 },
     '자신감': { valence: 0.7, arousal: 0.6, dominance: 0.9 },
@@ -17,20 +20,28 @@ export class TextAnalysisService {
     '만족': { valence: 0.8, arousal: 0.4, dominance: 0.7 },
     '편안': { valence: 0.7, arousal: 0.2, dominance: 0.5 },
     '평온': { valence: 0.7, arousal: 0.2, dominance: 0.6 },
+    '열정': { valence: 0.8, arousal: 0.8, dominance: 0.7 },
+    '도전': { valence: 0.7, arousal: 0.7, dominance: 0.8 },
+    '넘쳐': { valence: 0.7, arousal: 0.8, dominance: 0.6 },
     
     // 부정적 감정 키워드
     '힘들': { valence: 0.2, arousal: 0.6, dominance: 0.2 },
+    '힘들어': { valence: 0.2, arousal: 0.6, dominance: 0.2 },
     '스트레스': { valence: 0.2, arousal: 0.8, dominance: 0.3 },
     '화나': { valence: 0.1, arousal: 0.9, dominance: 0.8 },
+    '화가': { valence: 0.1, arousal: 0.9, dominance: 0.8 },
     '우울': { valence: 0.2, arousal: 0.2, dominance: 0.1 },
     '걱정': { valence: 0.3, arousal: 0.7, dominance: 0.2 },
     '불안': { valence: 0.3, arousal: 0.8, dominance: 0.2 },
     '슬프': { valence: 0.1, arousal: 0.3, dominance: 0.2 },
+    '슬픔': { valence: 0.1, arousal: 0.3, dominance: 0.2 },
     '실망': { valence: 0.2, arousal: 0.4, dominance: 0.2 },
     '분노': { valence: 0.1, arousal: 0.9, dominance: 0.8 },
     '짜증': { valence: 0.2, arousal: 0.8, dominance: 0.6 },
     '답답': { valence: 0.2, arousal: 0.7, dominance: 0.3 },
     '무서': { valence: 0.1, arousal: 0.8, dominance: 0.2 },
+    '참을': { valence: 0.2, arousal: 0.7, dominance: 0.3 },
+    '모르겠': { valence: 0.2, arousal: 0.6, dominance: 0.2 },
     
     // 강도 키워드
     '정말': { valence: 0.0, arousal: 0.3, dominance: 0.0 },
@@ -90,44 +101,63 @@ export class TextAnalysisService {
     let totalVAD = { valence: 0, arousal: 0, dominance: 0 };
     let wordCount = 0;
     let intensityMultiplier = 1.0;
+    let matchedKeywords: string[] = [];
+
+    this.logger.log(`Processing words: ${JSON.stringify(words)}`);
 
     for (const word of words) {
       // 강도 키워드 확인
       if (this.emotionKeywords[word] && 
           (word === '정말' || word === '너무' || word === '완전히' || word === '매우' || word === '굉장히')) {
         intensityMultiplier = 1.5;
+        this.logger.log(`Intensity keyword found: ${word}, multiplier: ${intensityMultiplier}`);
         continue;
       }
       
       if (word === '조금' || word === '약간') {
         intensityMultiplier = 0.7;
+        this.logger.log(`Low intensity keyword found: ${word}, multiplier: ${intensityMultiplier}`);
         continue;
       }
 
       // 감정 키워드 확인
+      let keywordMatched = false;
       for (const [keyword, vadScore] of Object.entries(this.emotionKeywords)) {
-        if (word.includes(keyword)) {
+        if (word.includes(keyword) || keyword.includes(word)) {
           totalVAD.valence += vadScore.valence * intensityMultiplier;
           totalVAD.arousal += vadScore.arousal * intensityMultiplier;
           totalVAD.dominance += vadScore.dominance * intensityMultiplier;
           wordCount++;
+          matchedKeywords.push(keyword);
+          this.logger.log(`Emotion keyword matched: "${word}" -> "${keyword}", VAD: ${JSON.stringify(vadScore)}`);
+          keywordMatched = true;
           break;
         }
+      }
+      
+      if (!keywordMatched) {
+        this.logger.log(`No emotion keyword found for: "${word}"`);
       }
       
       // 강도 리셋
       intensityMultiplier = 1.0;
     }
 
+    this.logger.log(`Total matched keywords: ${matchedKeywords.join(', ')}`);
+    this.logger.log(`Word count: ${wordCount}, Total VAD: ${JSON.stringify(totalVAD)}`);
+
     if (wordCount > 0) {
-      return {
+      const result = {
         valence: Math.max(0, Math.min(1, totalVAD.valence / wordCount)),
         arousal: Math.max(0, Math.min(1, totalVAD.arousal / wordCount)),
         dominance: Math.max(0, Math.min(1, totalVAD.dominance / wordCount)),
       };
+      this.logger.log(`Final VAD score: ${JSON.stringify(result)}`);
+      return result;
     }
 
     // 키워드가 없으면 중립
+    this.logger.log('No keywords found, returning neutral VAD');
     return { valence: 0.5, arousal: 0.5, dominance: 0.5 };
   }
 
