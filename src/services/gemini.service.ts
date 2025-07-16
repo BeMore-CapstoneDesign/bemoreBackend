@@ -150,6 +150,28 @@ export class GeminiService {
   }
 
   /**
+   * 일반 텍스트 생성 (CBT 피드백 등)
+   */
+  async generateContent(prompt: string): Promise<any> {
+    try {
+      if (!this.model) {
+        return {
+          content: 'Gemini API 키가 설정되지 않았습니다. Mock 응답을 반환합니다.',
+        };
+      }
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      return { content: text };
+    } catch (error) {
+      this.logger.error('Error generating content with Gemini:', error);
+      throw new Error('Failed to generate content');
+    }
+  }
+
+  /**
    * 컨텍스트를 포함한 채팅 프롬프트 생성
    */
   private buildContextualChatPrompt(message: string, conversationContext: string): string {

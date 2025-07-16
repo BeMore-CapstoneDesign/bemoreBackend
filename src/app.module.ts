@@ -4,7 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ChatModule } from './chat/chat.module';
-import { EmotionModule } from './emotion/emotion.module';
+import { EmotionModule } from './modules/emotion/emotion.module';
+import { CBTModule } from './modules/cbt/cbt.module';
 import { HistoryModule } from './history/history.module';
 import { TestModule } from './test/test.module';
 
@@ -16,6 +17,7 @@ import { TestModule } from './test/test.module';
     PrismaModule,
     ChatModule,
     EmotionModule,
+    CBTModule,
     HistoryModule,
     TestModule,
   ],
