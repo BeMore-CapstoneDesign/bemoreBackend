@@ -24,8 +24,7 @@ export class FacialAnalysisDto {
   @IsNumber({}, { each: true })
   landmarks: number[][];
 
-  @IsOptional()
-  emotions?: { [key: string]: number };
+  emotions: { [key: string]: number };
 }
 
 export class VoiceAnalysisDto {
@@ -39,8 +38,7 @@ export class VoiceAnalysisDto {
   @IsString()
   transcription: string;
 
-  @IsOptional()
-  audioFeatures?: {
+  audioFeatures: {
     pitch: number;
     tempo: number;
     volume: number;

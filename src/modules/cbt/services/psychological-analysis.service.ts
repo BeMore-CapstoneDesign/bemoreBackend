@@ -2,9 +2,153 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GeminiService } from '../../../services/gemini.service';
 import { VADScore, CBTFeedback } from '../../../types/vad.types';
 
+interface CBTStrategy {
+  name: string;
+  description: string;
+  techniques: string[];
+  exercises: string[];
+  resources: string[];
+  priorityTechniques?: string[];
+  focus?: string;
+}
+
+interface VADAdjustment {
+  focus: string;
+  priority: string[];
+}
+
 @Injectable()
 export class PsychologicalAnalysisService {
   private readonly logger = new Logger(PsychologicalAnalysisService.name);
+
+  // 감정별 CBT 전략 매핑 (Capstonedesign 참고)
+  private readonly emotionStrategies: Record<string, CBTStrategy> = {
+    angry: {
+      name: '분노 관리 전략',
+      description: '분노를 건강하게 관리하고 표현하는 방법',
+      techniques: [
+        '심호흡 및 이완 기법',
+        '분노의 원인 분석',
+        '건강한 의사소통 방법',
+        '시간 두기 (Time-out)',
+        '신체 활동을 통한 에너지 해소'
+      ],
+      exercises: [
+        '10초 심호흡: 깊게 들이마시고 천천히 내쉬기',
+        '분노 일기: 감정과 생각 기록하기',
+        '대안적 사고: 다른 관점에서 상황 바라보기'
+      ],
+      resources: [
+        '분노 관리 앱 사용',
+        '전문가 상담 고려',
+        '스트레스 관리 활동 참여'
+      ]
+    },
+    sad: {
+      name: '우울감 완화 전략',
+      description: '우울감을 줄이고 긍정적 사고를 촉진하는 방법',
+      techniques: [
+        '활동 스케줄링',
+        '긍정적 사고 재구성',
+        '사회적 연결 유지',
+        '신체 활동 증가',
+        '자기 돌봄 활동'
+      ],
+      exercises: [
+        '감사 일기: 매일 감사한 것 3가지 기록',
+        '즐거운 활동 목록 작성 및 실행',
+        '부정적 사고 도전하기'
+      ],
+      resources: [
+        '인지행동치료 프로그램',
+        '지지 그룹 참여',
+        '전문 상담사 상담'
+      ]
+    },
+    anxious: {
+      name: '불안 완화 전략',
+      description: '불안을 줄이고 안정감을 찾는 방법',
+      techniques: [
+        '점진적 근육 이완',
+        '마음챙김 명상',
+        '현재에 집중하기',
+        '불안의 원인 파악',
+        '체계적 둔감화'
+      ],
+      exercises: [
+        '5-4-3-2-1 감각 체크: 주변 환경 관찰하기',
+        '박스 호흡: 4초 들이마시고 4초 내쉬기',
+        '불안 일기: 불안의 패턴 기록'
+      ],
+      resources: [
+        '명상 앱 사용',
+        '요가나 태극권 수업',
+        '전문 치료사 상담'
+      ]
+    },
+    happy: {
+      name: '긍정적 감정 유지 전략',
+      description: '긍정적 감정을 지속하고 확장하는 방법',
+      techniques: [
+        '긍정적 경험 확장하기',
+        '성취감 기록하기',
+        '타인과 기쁨 공유하기',
+        '미래 목표 설정',
+        '자기 격려하기'
+      ],
+      exercises: [
+        '긍정적 순간 사진 찍기',
+        '성취 일기 작성',
+        '감사 편지 쓰기'
+      ],
+      resources: [
+        '긍정심리학 워크샵',
+        '취미 활동 참여',
+        '자원봉사 활동'
+      ]
+    },
+    neutral: {
+      name: '감정 인식 및 표현 전략',
+      description: '감정을 더 잘 인식하고 표현하는 방법',
+      techniques: [
+        '감정 라벨링 연습',
+        '신체 감각 관찰',
+        '감정 표현 연습',
+        '자기 인식 향상',
+        '감정 일기 작성'
+      ],
+      exercises: [
+        '감정 차트 작성',
+        '신체 스캔 명상',
+        '감정 표현 역할극'
+      ],
+      resources: [
+        '감정 인식 워크북',
+        '마음챙김 프로그램',
+        '예술 치료 활동'
+      ]
+    }
+  };
+
+  // VAD Score 기반 전략 조정
+  private readonly vadAdjustments: Record<string, VADAdjustment> = {
+    high_arousal: {
+      focus: '이완 및 진정 기법',
+      priority: ['심호흡', '근육 이완', '마음챙김']
+    },
+    low_arousal: {
+      focus: '활동 및 동기 부여',
+      priority: ['활동 스케줄링', '운동', '사회적 연결']
+    },
+    low_valence: {
+      focus: '긍정적 사고 촉진',
+      priority: ['감사 연습', '긍정적 재구성', '즐거운 활동']
+    },
+    high_dominance: {
+      focus: '협력 및 공감',
+      priority: ['적극적 경청', '공감 표현', '협력적 문제해결']
+    }
+  };
 
   constructor(private geminiService: GeminiService) {}
 
@@ -19,18 +163,106 @@ export class PsychologicalAnalysisService {
     try {
       this.logger.log('Generating CBT feedback based on VAD analysis');
 
-      // Gemini API를 사용한 CBT 피드백 생성
-      const prompt = this.buildCBTFeedbackPrompt(vadScore, context, emotionHistory);
+      // 감정 태그 생성
+      const emotionTag = this.generateEmotionTag(vadScore);
+      
+      // 기본 CBT 전략 매핑
+      const baseStrategy = this.mapEmotionToStrategy(emotionTag, vadScore);
+      
+      // Gemini API를 사용한 추가 피드백 생성
+      const prompt = this.buildCBTFeedbackPrompt(vadScore, context, emotionHistory, baseStrategy);
       
       const response = await this.geminiService.generateContent(prompt);
       
-      return this.parseCBTFeedback(response);
+      return this.parseCBTFeedback(response, baseStrategy);
     } catch (error) {
       this.logger.error('Error generating CBT feedback:', error);
       
-      // Mock CBT 피드백 반환
-      return this.getMockCBTFeedback(vadScore);
+      // 감정 태그 기반 Mock CBT 피드백 반환
+      const emotionTag = this.generateEmotionTag(vadScore);
+      const baseStrategy = this.mapEmotionToStrategy(emotionTag, vadScore);
+      return this.getMockCBTFeedback(vadScore, baseStrategy);
     }
+  }
+
+  /**
+   * VAD Score를 기반으로 감정 태그 생성
+   */
+  private generateEmotionTag(vadScore: VADScore): string {
+    const { valence, arousal, dominance } = vadScore;
+    
+    if (valence > 0.7 && arousal > 0.6) {
+      return 'excited';
+    } else if (valence > 0.7 && arousal <= 0.6) {
+      return 'happy';
+    } else if (valence <= 0.3 && arousal > 0.6) {
+      return 'angry';
+    } else if (valence <= 0.3 && arousal <= 0.6) {
+      return 'sad';
+    } else if (valence > 0.4 && valence <= 0.7 && arousal > 0.6) {
+      return 'surprised';
+    } else if (valence > 0.4 && valence <= 0.7 && arousal <= 0.6) {
+      return 'calm';
+    } else {
+      return 'neutral';
+    }
+  }
+
+  /**
+   * 감정을 CBT 전략으로 매핑
+   */
+  private mapEmotionToStrategy(emotionTag: string, vadScore: VADScore): CBTStrategy {
+    // 기본 전략 가져오기
+    const baseStrategy = this.emotionStrategies[emotionTag] || this.emotionStrategies.neutral;
+    
+    // VAD Score 기반 전략 조정
+    return this.adjustStrategyByVAD(baseStrategy, vadScore);
+  }
+
+  /**
+   * VAD Score를 기반으로 전략 조정
+   */
+  private adjustStrategyByVAD(baseStrategy: CBTStrategy, vadScore: VADScore): CBTStrategy {
+    const adjustedStrategy = { ...baseStrategy };
+    const { valence, arousal, dominance } = vadScore;
+    
+    // 각성도가 높은 경우
+    if (arousal > 0.7) {
+      const adjustment = this.vadAdjustments.high_arousal;
+      adjustedStrategy.focus = `${baseStrategy.name} - ${adjustment.focus}`;
+      adjustedStrategy.priorityTechniques = adjustment.priority;
+    }
+    
+    // 각성도가 낮은 경우
+    else if (arousal < 0.3) {
+      const adjustment = this.vadAdjustments.low_arousal;
+      adjustedStrategy.focus = `${baseStrategy.name} - ${adjustment.focus}`;
+      adjustedStrategy.priorityTechniques = adjustment.priority;
+    }
+    
+    // 긍정성이 낮은 경우
+    if (valence < 0.3) {
+      const adjustment = this.vadAdjustments.low_valence;
+      adjustedStrategy.focus = `${baseStrategy.name} - ${adjustment.focus}`;
+      if (!adjustedStrategy.priorityTechniques) {
+        adjustedStrategy.priorityTechniques = adjustment.priority;
+      } else {
+        adjustedStrategy.priorityTechniques.push(...adjustment.priority);
+      }
+    }
+    
+    // 지배성이 높은 경우
+    if (dominance > 0.7) {
+      const adjustment = this.vadAdjustments.high_dominance;
+      adjustedStrategy.focus = `${baseStrategy.name} - ${adjustment.focus}`;
+      if (!adjustedStrategy.priorityTechniques) {
+        adjustedStrategy.priorityTechniques = adjustment.priority;
+      } else {
+        adjustedStrategy.priorityTechniques.push(...adjustment.priority);
+      }
+    }
+    
+    return adjustedStrategy;
   }
 
   /**
@@ -39,7 +271,8 @@ export class PsychologicalAnalysisService {
   private buildCBTFeedbackPrompt(
     vadScore: VADScore,
     context: string,
-    emotionHistory: any[]
+    emotionHistory: any[],
+    baseStrategy?: CBTStrategy
   ): string {
     const { valence, arousal, dominance } = vadScore;
     
@@ -97,7 +330,7 @@ ${emotionHistory.length > 0 ?
   /**
    * Gemini 응답을 CBT 피드백으로 파싱
    */
-  private parseCBTFeedback(response: any): CBTFeedback {
+  private parseCBTFeedback(response: any, baseStrategy?: CBTStrategy): CBTFeedback {
     try {
       // JSON 응답 파싱 시도
       if (typeof response === 'string') {
@@ -151,7 +384,7 @@ ${emotionHistory.length > 0 ?
   /**
    * Mock CBT 피드백 생성
    */
-  private getMockCBTFeedback(vadScore: VADScore): CBTFeedback {
+  private getMockCBTFeedback(vadScore: VADScore, baseStrategy?: CBTStrategy): CBTFeedback {
     const { valence, arousal, dominance } = vadScore;
     
     let currentState = '중립적인 감정 상태입니다.';
@@ -250,7 +483,7 @@ ${emotionHistory.length > 0 ?
     }, {} as { [key: string]: number });
 
     const frequentEmotions = Object.entries(emotionCounts)
-      .filter(([_, count]) => count > emotionHistory.length * 0.3)
+      .filter(([_, count]) => (count as number) > emotionHistory.length * 0.3)
       .map(([emotion, _]) => emotion);
 
     if (frequentEmotions.length > 0) {

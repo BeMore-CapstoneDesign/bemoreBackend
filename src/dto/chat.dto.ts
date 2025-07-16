@@ -17,6 +17,10 @@ export class ChatRequestDto {
   sessionId?: string;
 
   @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @IsOptional()
   @IsObject()
   emotionContext?: EmotionContext;
 }

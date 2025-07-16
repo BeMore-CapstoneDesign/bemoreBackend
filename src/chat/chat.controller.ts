@@ -11,7 +11,9 @@ export class ChatController {
   @Post('gemini')
   async chatWithGemini(@Body() request: ChatRequestDto): Promise<ChatResponseDto> {
     this.logger.log(`Chat request received: ${request.message}`);
-    return this.chatService.processChatMessage(request);
+    // 임시로 고정된 userId 사용 (실제로는 인증에서 가져와야 함)
+    const userId = request.userId || 'default-user';
+    return this.chatService.processChatMessage(request, userId);
   }
 
   @Get('context/:sessionId')

@@ -120,7 +120,7 @@ export class MultimodalAnalysisService {
   }
 
   /**
-   * 모달리티별 가중치 계산
+   * 모달리티별 가중치 계산 (신뢰도 기반 개선)
    */
   private calculateModalityWeights(
     facial?: FacialAnalysisResult,
@@ -132,19 +132,22 @@ export class MultimodalAnalysisService {
 
     // 얼굴 표정: 높은 신뢰도 (감정 표현의 직접적 지표)
     if (facial) {
-      weights.facial = facial.confidence * 0.4; // 40% 기본 가중치
+      const confidenceWeight = this.calculateConfidenceWeight(facial.confidence);
+      weights.facial = 0.4 * confidenceWeight; // 40% 기본 가중치 * 신뢰도
       totalWeight += weights.facial;
     }
 
     // 음성: 중간 신뢰도 (감정의 음성적 표현)
     if (voice) {
-      weights.voice = voice.confidence * 0.35; // 35% 기본 가중치
+      const confidenceWeight = this.calculateConfidenceWeight(voice.confidence);
+      weights.voice = 0.35 * confidenceWeight; // 35% 기본 가중치 * 신뢰도
       totalWeight += weights.voice;
     }
 
     // 텍스트: 낮은 신뢰도 (의식적 제어 가능)
     if (text) {
-      weights.text = text.confidence * 0.25; // 25% 기본 가중치
+      const confidenceWeight = this.calculateConfidenceWeight(text.confidence);
+      weights.text = 0.25 * confidenceWeight; // 25% 기본 가중치 * 신뢰도
       totalWeight += weights.text;
     }
 
@@ -159,22 +162,64 @@ export class MultimodalAnalysisService {
   }
 
   /**
-   * 주요 감정 식별
+   * 신뢰도 기반 가중치 계산 (Capstonedesign 참고)
+   */
+  private calculateConfidenceWeight(confidence: number): number {
+    // 신뢰도가 높을수록 가중치 증가 (0.1 ~ 1.0 범위)
+    return Math.min(1.0, Math.max(0.1, confidence));
+  }
+
+  /**
+   * VAD 점수 정규화 (0-1 범위)
+   */
+  private normalizeVADScore(vadScore: VADScore): VADScore {
+    return {
+      valence: Math.max(0.0, Math.min(1.0, vadScore.valence)),
+      arousal: Math.max(0.0, Math.min(1.0, vadScore.arousal)),
+      dominance: Math.max(0.0, Math.min(1.0, vadScore.dominance)),
+    };
+  }
+
+  /**
+   * 주요 감정 식별 (개선된 VAD 기반 매핑)
    */
   private identifyPrimaryEmotion(vadScore: VADScore): string {
+    const normalizedVAD = this.normalizeVADScore(vadScore);
+    const { valence, arousal, dominance } = normalizedVAD;
+
+    // Capstonedesign의 감정 태그 생성 로직 참고
+    if (valence > 0.7 && arousal > 0.6) {
+      return 'excited'; // 흥분
+    } else if (valence > 0.7 && arousal <= 0.6) {
+      return 'happy'; // 기쁨
+    } else if (valence <= 0.3 && arousal > 0.6) {
+      return 'angry'; // 분노
+    } else if (valence <= 0.3 && arousal <= 0.6) {
+      return 'sad'; // 슬픔
+    } else if (valence > 0.4 && valence <= 0.7 && arousal > 0.6) {
+      return 'surprised'; // 놀람
+    } else if (valence > 0.4 && valence <= 0.7 && arousal <= 0.6) {
+      return 'calm'; // 평온
+    } else {
+      return 'neutral'; // 중립
+    }
+  }
+
+  /**
+   * 감정 강도 계산 (VAD 공간에서 원점으로부터의 거리)
+   */
+  private calculateEmotionIntensity(vadScore: VADScore): number {
     const { valence, arousal, dominance } = vadScore;
-
-    // VAD 공간에서 감정 매핑
-    if (valence > 0.7 && arousal > 0.6) return '기쁨';
-    if (valence > 0.7 && arousal < 0.4) return '만족';
-    if (valence < 0.3 && arousal > 0.6) return '분노';
-    if (valence < 0.3 && arousal < 0.4) return '우울';
-    if (valence < 0.4 && arousal > 0.7) return '불안';
-    if (valence > 0.6 && arousal < 0.3) return '평온';
-    if (dominance > 0.7) return '자신감';
-    if (dominance < 0.3) return '두려움';
-
-    return '중립';
+    
+    // VAD 공간에서 중립점(0.5, 0.5, 0.5)으로부터의 거리 계산
+    const distance = Math.sqrt(
+      Math.pow(valence - 0.5, 2) + 
+      Math.pow(arousal - 0.5, 2) + 
+      Math.pow(dominance - 0.5, 2)
+    );
+    
+    // 0-1 범위로 정규화
+    return Math.min(1.0, distance * 2);
   }
 
   /**
@@ -259,7 +304,7 @@ export class MultimodalAnalysisService {
     riskLevel: 'low' | 'medium' | 'high',
     availableModalities: string[]
   ): string[] {
-    const recommendations = [];
+    const recommendations: string[] = [];
     const { valence, arousal, dominance } = vadScore;
 
     // 위험 수준별 기본 권장사항
@@ -323,7 +368,7 @@ export class MultimodalAnalysisService {
 
     // 변화 추세 판단
     let trend: 'improving' | 'worsening' | 'stable' = 'stable';
-    const changes = [];
+    const changes: string[] = [];
 
     if (valenceChange > 0.1) {
       trend = 'improving';
