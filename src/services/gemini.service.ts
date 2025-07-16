@@ -72,6 +72,35 @@ export class GeminiService {
     }
   }
 
+  /**
+   * 컨텍스트를 포함한 채팅 응답 생성
+   */
+  async generateContextualChatResponse(message: string, conversationContext: string): Promise<any> {
+    try {
+      if (!this.model) {
+        // Mock response with context awareness
+        return {
+          content: `이전 대화를 기억하고 있습니다. ${message}에 대해 말씀해주셨네요. 지금까지의 대화 맥락을 고려하여 더 구체적인 도움을 드릴 수 있습니다.`,
+          emotionAnalysis: {
+            primaryEmotion: '공감',
+            confidence: 0.8,
+            suggestions: ['연속성 있는 상담', '이전 내용과 연결된 조언', '진행 상황 점검']
+          }
+        };
+      }
+
+      const prompt = this.buildContextualChatPrompt(message, conversationContext);
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      return this.parseChatResponse(text);
+    } catch (error) {
+      this.logger.error('Error generating contextual chat response with Gemini:', error);
+      throw new Error('Failed to generate contextual chat response');
+    }
+  }
+
   private buildEmotionAnalysisPrompt(content: string, mediaType: string): string {
     return `
 당신은 전문적인 감정 분석 AI입니다. 다음 ${mediaType} 내용을 분석하여 감정을 파악하고 CBT 기법을 제안해주세요.
@@ -113,6 +142,37 @@ export class GeminiService {
     "primaryEmotion": "감지된 주요 감정",
     "confidence": 0.95,
     "suggestions": ["CBT 기법 제안들"]
+  }
+}
+    `;
+
+    return prompt;
+  }
+
+  /**
+   * 컨텍스트를 포함한 채팅 프롬프트 생성
+   */
+  private buildContextualChatPrompt(message: string, conversationContext: string): string {
+    const prompt = `
+당신은 전문적인 CBT 상담사입니다. 이전 대화 내용을 기억하고 연속성 있는 상담을 제공해주세요.
+
+${conversationContext}
+
+현재 사용자 메시지: ${message}
+
+위의 대화 맥락을 고려하여:
+1. 이전 대화 내용을 참고하여 연속성 있는 응답을 제공하세요
+2. 사용자의 감정 변화와 진행 상황을 파악하세요
+3. 이전에 언급된 내용과 연결하여 조언을 제공하세요
+4. 자연스럽고 공감적인 톤을 유지하세요
+
+다음 JSON 형식으로 응답해주세요:
+{
+  "content": "상담사 응답 내용 (이전 대화 맥락을 고려한 연속성 있는 응답)",
+  "emotionAnalysis": {
+    "primaryEmotion": "감지된 주요 감정",
+    "confidence": 0.95,
+    "suggestions": ["CBT 기법 제안들 (이전 내용과 연결된 구체적인 조언)"]
   }
 }
     `;

@@ -1,33 +1,40 @@
-import { Controller, Post, Body, UseGuards, Request, HttpStatus, HttpException, Logger } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Logger } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatRequestDto, ChatResponseDto } from '../dto/chat.dto';
 
-@Controller('chat')
+@Controller('api/chat')
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
-  
+
   constructor(private readonly chatService: ChatService) {}
 
   @Post('gemini')
-  async chatWithGemini(
-    @Body() chatRequestDto: ChatRequestDto,
-    @Request() req: any,
-  ): Promise<ChatResponseDto> {
-    try {
-      // 임시로 userId를 하드코딩 (실제로는 JWT 토큰에서 추출)
-      const userId = 'temp-user-id';
-      
-      const response = await this.chatService.processChatMessage(chatRequestDto, userId);
-      return response;
-    } catch (error) {
-      this.logger.error('Chat error:', error);
-      throw new HttpException(
-        {
-          success: false,
-          message: error.message || '채팅 처리 중 오류가 발생했습니다.',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+  async chatWithGemini(@Body() request: ChatRequestDto): Promise<ChatResponseDto> {
+    this.logger.log(`Chat request received: ${request.message}`);
+    return this.chatService.processChatMessage(request);
+  }
+
+  @Get('context/:sessionId')
+  async getConversationContext(@Param('sessionId') sessionId: string) {
+    this.logger.log(`Context request for session: ${sessionId}`);
+    return this.chatService.getConversationContext(sessionId);
+  }
+
+  @Get('history/:sessionId')
+  async getConversationHistory(@Param('sessionId') sessionId: string) {
+    this.logger.log(`History request for session: ${sessionId}`);
+    return this.chatService.getConversationHistory(sessionId);
+  }
+
+  @Post('test-context')
+  async testContextualResponse(@Body() request: { message: string; sessionId: string }) {
+    this.logger.log(`Test contextual response for session: ${request.sessionId}`);
+    return this.chatService.testContextualResponse(request.message, request.sessionId);
+  }
+
+  @Post('test-tokens')
+  async testTokenManagement(@Body() request: { messages: Array<{ role: string; content: string }> }) {
+    this.logger.log('Test token management');
+    return this.chatService.testTokenManagement(request.messages);
   }
 } 

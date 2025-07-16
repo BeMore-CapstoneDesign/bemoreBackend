@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeminiService } from '../services/gemini.service';
+import { ContextService } from '../services/context.service';
 import { ChatRequestDto, ChatResponseDto } from '../dto/chat.dto';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class ChatService {
   constructor(
     private prisma: PrismaService,
     private geminiService: GeminiService,
+    private contextService: ContextService,
   ) {}
 
   async processChatMessage(request: ChatRequestDto, userId: string): Promise<ChatResponseDto> {
@@ -48,11 +50,30 @@ export class ChatService {
         },
       });
 
-      // Gemini API를 통한 응답 생성
-      const geminiResponse = await this.geminiService.generateChatResponse(
-        request.message,
-        request.emotionContext,
-      );
+      // 대화 컨텍스트 가져오기
+      let conversationContext = '';
+      try {
+        const context = await this.contextService.getConversationContext(sessionId);
+        if (context.messages.length > 0) {
+          conversationContext = this.contextService.formatContextForPrompt(context);
+        }
+      } catch (error) {
+        this.logger.warn('Failed to retrieve conversation context:', error);
+      }
+
+      // 컨텍스트가 있으면 컨텍스트를 포함한 응답 생성, 없으면 기본 응답 생성
+      let geminiResponse;
+      if (conversationContext) {
+        geminiResponse = await this.geminiService.generateContextualChatResponse(
+          request.message,
+          conversationContext,
+        );
+      } else {
+        geminiResponse = await this.geminiService.generateChatResponse(
+          request.message,
+          request.emotionContext,
+        );
+      }
 
       // AI 응답 저장
       const assistantMessage = await this.prisma.message.create({
@@ -118,6 +139,87 @@ export class ChatService {
     } catch (error) {
       this.logger.error('Error fetching session messages:', error);
       throw new Error('Failed to fetch session messages');
+    }
+  }
+
+  /**
+   * 대화 컨텍스트 가져오기
+   */
+  async getConversationContext(sessionId: string) {
+    try {
+      return await this.contextService.getConversationContext(sessionId);
+    } catch (error) {
+      this.logger.error('Error getting conversation context:', error);
+      throw new Error('Failed to get conversation context');
+    }
+  }
+
+  /**
+   * 대화 히스토리 가져오기
+   */
+  async getConversationHistory(sessionId: string) {
+    try {
+      return await this.getSessionMessages(sessionId);
+    } catch (error) {
+      this.logger.error('Error getting conversation history:', error);
+      throw new Error('Failed to get conversation history');
+    }
+  }
+
+  /**
+   * 컨텍스트를 포함한 응답 테스트
+   */
+  async testContextualResponse(message: string, sessionId: string) {
+    try {
+      const context = await this.contextService.getConversationContext(sessionId);
+      const conversationContext = this.contextService.formatContextForPrompt(context);
+      
+      const response = await this.geminiService.generateContextualChatResponse(
+        message,
+        conversationContext,
+      );
+
+      return {
+        success: true,
+        data: {
+          message,
+          context: context.messages,
+          response,
+          contextLength: context.messages.length,
+          estimatedTokens: context.totalTokens,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error testing contextual response:', error);
+      throw new Error('Failed to test contextual response');
+    }
+  }
+
+  /**
+   * 토큰 관리 테스트
+   */
+  async testTokenManagement(messages: Array<{ role: string; content: string }>) {
+    try {
+      // 간단한 토큰 계산 (실제로는 TokenManagerService 사용)
+      const totalTokens = messages.reduce((total, msg) => {
+        return total + Math.ceil(msg.content.length / 4);
+      }, 0);
+
+      return {
+        success: true,
+        data: {
+          messageCount: messages.length,
+          totalTokens,
+          averageTokensPerMessage: Math.round(totalTokens / messages.length),
+          isOverLimit: totalTokens > 800000,
+          recommendations: totalTokens > 800000 ? 
+            ['메시지 수 줄이기', '긴 메시지 축약', '컨텍스트 요약'] : 
+            ['현재 상태 유지 가능'],
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error testing token management:', error);
+      throw new Error('Failed to test token management');
     }
   }
 } 
