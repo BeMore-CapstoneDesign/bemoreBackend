@@ -2,7 +2,7 @@ import { Controller, Post, Get, Body, Param, Logger } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatRequestDto, ChatResponseDto } from '../dto/chat.dto';
 
-@Controller('api/chat')
+@Controller('chat')
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
 

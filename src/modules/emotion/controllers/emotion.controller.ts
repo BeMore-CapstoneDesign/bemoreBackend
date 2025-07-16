@@ -12,7 +12,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname } from 'path';
 import {
   MultimodalAnalysisDto,
@@ -26,7 +26,7 @@ import { VoiceAnalysisService } from '../services/voice-analysis.service';
 import { MultimodalAnalysisService } from '../services/multimodal-analysis.service';
 import { PsychologicalAnalysisService } from '../../cbt/services/psychological-analysis.service';
 
-@Controller('api/emotion')
+@Controller('emotion')
 export class EmotionController {
   private readonly logger = new Logger(EmotionController.name);
 
@@ -76,20 +76,19 @@ export class EmotionController {
   @Post('analyze/facial')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/images',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          return cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        // 파일 존재 여부 확인
+        if (!file) {
+          cb(new Error('파일이 업로드되지 않았습니다.'), false);
+          return;
+        }
+
+        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (file.mimetype && allowedMimeTypes.includes(file.mimetype)) {
           cb(null, true);
         } else {
+          console.warn(`Unsupported image format: ${file.mimetype} - ${file.originalname}`);
           cb(new Error('지원하지 않는 이미지 형식입니다.'), false);
         }
       },
@@ -141,22 +140,19 @@ export class EmotionController {
   @Post('analyze/voice')
   @UseInterceptors(
     FileInterceptor('audio', {
-      storage: diskStorage({
-        destination: './uploads/audio',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          return cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.match(/\/(wav|mp3|m4a|ogg)$/)) {
-          cb(null, true);
-        } else {
-          cb(new Error('지원하지 않는 오디오 형식입니다.'), false);
+        // 파일 존재 여부 확인
+        if (!file) {
+          cb(new Error('파일이 업로드되지 않았습니다.'), false);
+          return;
         }
+
+        console.log(`File filter check: ${file.originalname}, mimetype: ${file.mimetype}`);
+
+        // 임시로 모든 파일 허용 (테스트용)
+        console.log(`File accepted for testing: ${file.originalname}`);
+        cb(null, true);
       },
       limits: {
         fileSize: 10 * 1024 * 1024, // 10MB
@@ -180,9 +176,36 @@ export class EmotionController {
         );
       }
 
+      this.logger.log(`Audio file received: ${audio.originalname}, size: ${audio.size}, mimetype: ${audio.mimetype}`);
+
+      // 파일 크기 체크
+      if (audio.size > 10 * 1024 * 1024) { // 10MB
+        throw new HttpException(
+          {
+            success: false,
+            message: '오디오 파일이 너무 큽니다. 10MB 이하의 파일을 사용해주세요.',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 파일 버퍼 존재 확인
+      if (!audio.buffer || audio.buffer.length === 0) {
+        throw new HttpException(
+          {
+            success: false,
+            message: '업로드된 파일이 비어있습니다.',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 음성 분석 서비스 호출
+      this.logger.log('Calling voice analysis service...');
       const result = await this.voiceAnalysisService.analyzeVoiceTone(
         audio.buffer,
       );
+      this.logger.log('Voice analysis completed successfully');
 
       return {
         success: true,
@@ -190,10 +213,12 @@ export class EmotionController {
       };
     } catch (error) {
       this.logger.error('Error in voice analysis:', error);
+      this.logger.error('Error details:', error.message, error.stack);
       throw new HttpException(
         {
           success: false,
           message: '음성 톤 분석 중 오류가 발생했습니다.',
+          error: error.message,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

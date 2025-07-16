@@ -8,6 +8,7 @@ import { EmotionModule } from './modules/emotion/emotion.module';
 import { CBTModule } from './modules/cbt/cbt.module';
 import { HistoryModule } from './history/history.module';
 import { TestModule } from './test/test.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TestModule } from './test/test.module';
     CBTModule,
     HistoryModule,
     TestModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
