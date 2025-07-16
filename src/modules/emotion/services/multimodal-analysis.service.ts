@@ -6,10 +6,13 @@ import {
   TextAnalysisResult,
   VADScore 
 } from '../../../types/vad.types';
+import { TextAnalysisService } from './text-analysis.service';
 
 @Injectable()
 export class MultimodalAnalysisService {
   private readonly logger = new Logger(MultimodalAnalysisService.name);
+
+  constructor(private readonly textAnalysisService: TextAnalysisService) {}
 
   /**
    * 멀티모달 데이터 통합 분석

@@ -23,6 +23,7 @@ import {
 } from '../../../dto/multimodal.dto';
 import { FacialAnalysisService } from '../services/facial-analysis.service';
 import { VoiceAnalysisService } from '../services/voice-analysis.service';
+import { TextAnalysisService } from '../services/text-analysis.service';
 import { MultimodalAnalysisService } from '../services/multimodal-analysis.service';
 import { PsychologicalAnalysisService } from '../../cbt/services/psychological-analysis.service';
 
@@ -33,6 +34,7 @@ export class EmotionController {
   constructor(
     private readonly facialAnalysisService: FacialAnalysisService,
     private readonly voiceAnalysisService: VoiceAnalysisService,
+    private readonly textAnalysisService: TextAnalysisService,
     private readonly multimodalAnalysisService: MultimodalAnalysisService,
     private readonly psychologicalAnalysisService: PsychologicalAnalysisService,
   ) {}
@@ -48,10 +50,17 @@ export class EmotionController {
     try {
       this.logger.log('Starting multimodal emotion analysis');
 
+      // 텍스트 분석 수행
+      let textAnalysis: any = undefined;
+      if (data.text?.content) {
+        textAnalysis = await this.textAnalysisService.analyzeTextEmotion(data.text.content);
+        this.logger.log(`Text analysis result: ${JSON.stringify(textAnalysis)}`);
+      }
+
       const integratedAnalysis = await this.multimodalAnalysisService.integrateAnalysis({
         facial: data.facial,
         voice: data.voice,
-        text: data.text,
+        text: textAnalysis,
       });
 
       return {
@@ -219,6 +228,46 @@ export class EmotionController {
           success: false,
           message: '음성 톤 분석 중 오류가 발생했습니다.',
           error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * 텍스트 기반 감정 분석
+   */
+  @Post('analyze/text')
+  async analyzeText(@Body() data: { text: string }): Promise<{
+    success: boolean;
+    data: any;
+  }> {
+    try {
+      this.logger.log(`Analyzing text emotion: "${data.text}"`);
+
+      if (!data.text || data.text.trim().length === 0) {
+        throw new HttpException(
+          {
+            success: false,
+            message: '텍스트가 필요합니다.',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const result = await this.textAnalysisService.analyzeTextEmotion(data.text);
+      this.logger.log(`Text analysis completed: ${JSON.stringify(result)}`);
+
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error('Error in text analysis:', error);
+      throw new HttpException(
+        {
+          success: false,
+          message: '텍스트 감정 분석 중 오류가 발생했습니다.',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

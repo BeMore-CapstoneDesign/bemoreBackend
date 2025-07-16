@@ -28,8 +28,10 @@ export interface VoiceAnalysisResult {
 export interface TextAnalysisResult {
   vadScore: VADScore;
   confidence: number;
+  primaryEmotion: string;
   keywords: string[];
-  sentiment: 'positive' | 'negative' | 'neutral';
+  intensity: 'low' | 'medium' | 'high';
+  textLength: number;
 }
 
 export interface IntegratedEmotionAnalysis {

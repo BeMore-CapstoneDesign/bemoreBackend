@@ -47,19 +47,35 @@ export class VoiceAnalysisDto {
 }
 
 export class TextAnalysisDto {
+  @IsOptional()
+  @IsString()
+  content?: string;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => VADScoreDto)
-  vadScore: VADScoreDto;
+  vadScore?: VADScoreDto;
 
+  @IsOptional()
   @IsNumber()
-  confidence: number;
+  confidence?: number;
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  keywords: string[];
+  keywords?: string[];
 
+  @IsOptional()
   @IsString()
-  sentiment: 'positive' | 'negative' | 'neutral';
+  primaryEmotion?: string;
+
+  @IsOptional()
+  @IsString()
+  intensity?: 'low' | 'medium' | 'high';
+
+  @IsOptional()
+  @IsNumber()
+  textLength?: number;
 }
 
 export class MultimodalAnalysisDto {
