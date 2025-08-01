@@ -1,0 +1,108 @@
+# API Development Standards & Patterns
+
+## 🎯 **Controller Development Rules**
+
+### ✅ **MUST DO:**
+1. **Use proper HTTP decorators**: `@Post()`, `@Get()`, `@Put()`, `@Delete()`
+2. **Implement comprehensive error handling** with `HttpException`
+3. **Add request validation** using DTOs with `class-validator`
+4. **Use proper parameter decorators**: `@Body()`, `@Param()`, `@Query()`, `@UploadedFile()`
+5. **Return standardized response format**:
+   ```typescript
+   {
+     success: boolean;
+     data: T;
+     message?: string;
+   }
+   ```
+6. **Add JSDoc comments** for all public methods
+7. **Use Logger service** for debugging and monitoring
+
+### ❌ **NEVER DO:**
+1. **Don't return raw database objects** - always transform to DTOs
+2. **Don't handle business logic in controllers** - delegate to services
+3. **Don't skip input validation** - always validate all inputs
+4. **Don't expose internal errors** - sanitize error messages
+5. **Don't use synchronous operations** - always use async/await
+
+## 🔧 **Service Layer Patterns**
+
+### ✅ **MUST DO:**
+1. **Use `@Injectable()` decorator** for all services
+2. **Implement proper dependency injection** in constructors
+3. **Handle external API calls** with proper error handling
+4. **Use TypeScript interfaces** for all method signatures
+5. **Implement retry logic** for external API failures
+6. **Add comprehensive logging** for debugging
+7. **Use proper error types** (`HttpException`, `BadRequestException`, etc.)
+
+### ❌ **NEVER DO:**
+1. **Don't use `any` type** - define proper interfaces
+2. **Don't ignore promise rejections** - always handle errors
+3. **Don't make services stateful** - keep them stateless
+4. **Don't hardcode configuration** - use ConfigService
+5. **Don't skip input validation** in service methods
+
+## 📝 **DTO & Validation Patterns**
+
+### ✅ **MUST DO:**
+1. **Use `class-validator` decorators** for all input validation
+2. **Create separate DTOs** for request and response
+3. **Use `class-transformer`** for data transformation
+4. **Implement nested validation** for complex objects
+5. **Add proper TypeScript types** for all properties
+
+### ❌ **NEVER DO:**
+1. **Don't skip validation decorators** - always validate inputs
+2. **Don't use `any` in DTOs** - define proper types
+3. **Don't expose sensitive fields** in response DTOs
+4. **Don't ignore validation errors** - handle them properly
+
+## 🔐 **Security & File Upload**
+
+### ✅ **MUST DO:**
+1. **Use `FileInterceptor`** with proper configuration
+2. **Validate file types** and sizes
+3. **Use `memoryStorage()`** for file processing
+4. **Sanitize file names** and paths
+5. **Implement proper CORS** configuration
+
+### ❌ **NEVER DO:**
+1. **Don't use `diskStorage()`** without proper security
+2. **Don't trust file extensions** - validate MIME types
+3. **Don't allow unlimited file sizes** - set proper limits
+4. **Don't expose file paths** in responses
+
+## 📊 **Database Integration**
+
+### ✅ **MUST DO:**
+1. **Use Prisma Client** for all database operations
+2. **Handle database errors** gracefully
+3. **Use transactions** for complex operations
+4. **Implement proper pagination** for list endpoints
+5. **Use proper relations** between models
+
+### ❌ **NEVER DO:**
+1. **Don't use raw SQL** - use Prisma ORM
+2. **Don't ignore database errors** - handle them properly
+3. **Don't use N+1 queries** - use proper includes
+4. **Don't expose database errors** to clients
+
+## 🧪 **Testing Requirements**
+
+### ✅ **MUST DO:**
+1. **Write unit tests** for all services
+2. **Mock external dependencies** in tests
+3. **Test error scenarios** and edge cases
+4. **Use proper test data** and fixtures
+5. **Test validation** and error handling
+
+### ❌ **NEVER DO:**
+1. **Don't skip error case testing** - test all scenarios
+2. **Don't use real external APIs** in tests
+3. **Don't ignore test coverage** - aim for high coverage
+4. **Don't test implementation details** - test behavior
+description:
+globs:
+alwaysApply: false
+---

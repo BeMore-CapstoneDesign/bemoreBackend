@@ -1,0 +1,144 @@
+# Database Patterns & Prisma ORM Standards
+
+## 🗄️ **Prisma Schema Design**
+
+### ✅ **MUST DO:**
+1. **Use proper field types** (String, Int, DateTime, Json, Boolean)
+2. **Define relationships** with `@relation` decorators
+3. **Use `@id` and `@default(cuid())`** for primary keys
+4. **Include timestamps** (`createdAt`, `updatedAt`) on all models
+5. **Use `@unique`** for unique constraints
+6. **Define proper indexes** for performance
+7. **Use JSON fields** for flexible data structures
+
+### ❌ **NEVER DO:**
+1. **Don't use raw SQL types** - use Prisma's type system
+2. **Don't forget foreign key constraints** - always define relations
+3. **Don't use generic field names** - be specific and descriptive
+4. **Don't ignore data validation** - use proper field constraints
+
+## 🔄 **Database Operations**
+
+### ✅ **MUST DO:**
+1. **Use Prisma Client** for all database operations
+2. **Handle database errors** with try-catch blocks
+3. **Use transactions** for complex operations
+4. **Implement proper pagination** for list queries
+5. **Use `include`** for related data fetching
+6. **Add proper logging** for database operations
+7. **Use `select`** to limit returned fields
+
+### ❌ **NEVER DO:**
+1. **Don't use raw SQL queries** - use Prisma ORM
+2. **Don't ignore database errors** - always handle them
+3. **Don't use N+1 queries** - use proper includes
+4. **Don't fetch unnecessary data** - use select clauses
+5. **Don't forget to close connections** - Prisma handles this automatically
+
+## 📊 **Data Models Reference**
+
+### **User Model** ([prisma/schema.prisma](mdc:prisma/schema.prisma)):
+```prisma
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions  Session[]
+}
+```
+
+### **Session Model**:
+```prisma
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  messageCount Int     @default(0)
+  emotionTrends Json?
+  summary     String?
+  messages    Message[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+```
+
+### **Message Model**:
+```prisma
+model Message {
+  id            String   @id @default(cuid())
+  sessionId     String
+  session       Session  @relation(fields: [sessionId], references: [id])
+  content       String
+  role          String   // "user" | "assistant"
+  timestamp     DateTime @default(now())
+  emotionAnalysis Json?
+}
+```
+
+## 🔍 **Query Patterns**
+
+### ✅ **MUST DO:**
+1. **Use proper filtering** with `where` clauses
+2. **Implement sorting** with `orderBy`
+3. **Use pagination** with `skip` and `take`
+4. **Handle null values** properly
+5. **Use type-safe queries** with Prisma Client
+
+### ❌ **NEVER DO:**
+1. **Don't use string concatenation** for queries
+2. **Don't ignore query performance** - use proper indexes
+3. **Don't fetch all records** without pagination
+4. **Don't use unsafe query methods** - stick to Prisma's type-safe API
+
+## 🛡️ **Data Validation**
+
+### ✅ **MUST DO:**
+1. **Validate data before saving** using DTOs
+2. **Handle unique constraint violations** gracefully
+3. **Validate foreign key relationships** before operations
+4. **Use proper error messages** for validation failures
+5. **Implement data sanitization** before database operations
+
+### ❌ **NEVER DO:**
+1. **Don't trust user input** - always validate
+2. **Don't ignore constraint violations** - handle them properly
+3. **Don't expose database errors** to clients
+4. **Don't skip data sanitization** - clean inputs before saving
+
+## 🔧 **Migration & Schema Management**
+
+### ✅ **MUST DO:**
+1. **Use Prisma migrations** for schema changes
+2. **Test migrations** in development first
+3. **Backup database** before major changes
+4. **Use descriptive migration names**
+5. **Review generated migrations** before applying
+
+### ❌ **NEVER DO:**
+1. **Don't modify schema directly** - use migrations
+2. **Don't skip migration testing** - always test first
+3. **Don't ignore migration conflicts** - resolve them properly
+4. **Don't apply migrations to production** without testing
+
+## 📈 **Performance Optimization**
+
+### ✅ **MUST DO:**
+1. **Use database indexes** for frequently queried fields
+2. **Implement proper pagination** for large datasets
+3. **Use `select`** to limit returned fields
+4. **Optimize queries** to avoid N+1 problems
+5. **Monitor query performance** in development
+
+### ❌ **NEVER DO:**
+1. **Don't ignore query performance** - optimize slow queries
+2. **Don't fetch unnecessary data** - use select clauses
+3. **Don't use inefficient query patterns** - learn Prisma best practices
+4. **Don't forget to add indexes** for performance-critical fields
+description:
+globs:
+alwaysApply: false
+---

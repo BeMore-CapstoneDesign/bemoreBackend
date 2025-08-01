@@ -1,0 +1,147 @@
+# Error Handling & Logging Standards
+
+## 🚨 **Error Handling Patterns**
+
+### ✅ **MUST DO:**
+1. **Use NestJS HttpException** for HTTP errors
+2. **Implement try-catch blocks** around all async operations
+3. **Use specific exception types**:
+   - `BadRequestException` for validation errors
+   - `UnauthorizedException` for auth failures
+   - `NotFoundException` for missing resources
+   - `InternalServerErrorException` for server errors
+4. **Provide meaningful error messages** to clients
+5. **Log all errors** with proper context
+6. **Handle external API failures** gracefully
+7. **Implement fallback mechanisms** for critical services
+
+### ❌ **NEVER DO:**
+1. **Don't expose internal errors** to clients
+2. **Don't ignore promise rejections** - always handle them
+3. **Don't use generic error messages** - be specific
+4. **Don't log sensitive information** in error messages
+5. **Don't let unhandled exceptions** crash the application
+
+## 📝 **Logging Standards**
+
+### ✅ **MUST DO:**
+1. **Use NestJS Logger service** for all logging
+2. **Include proper context** in log messages
+3. **Use appropriate log levels**:
+   - `log()` for general information
+   - `warn()` for warnings
+   - `error()` for errors
+   - `debug()` for debugging information
+4. **Log request/response data** for debugging
+5. **Include correlation IDs** for request tracing
+6. **Log performance metrics** for slow operations
+
+### ❌ **NEVER DO:**
+1. **Don't log sensitive data** (passwords, API keys, personal info)
+2. **Don't use console.log** - use Logger service
+3. **Don't log excessive information** - keep logs focused
+4. **Don't ignore log levels** - use appropriate levels
+
+## 🔧 **Error Response Format**
+
+### ✅ **MUST DO:**
+1. **Use standardized error response format**:
+   ```typescript
+   {
+     success: false,
+     message: string,
+     error?: string,
+     timestamp?: string,
+     path?: string
+   }
+   ```
+2. **Include HTTP status codes** in responses
+3. **Provide actionable error messages** to clients
+4. **Include request correlation IDs** for debugging
+
+### ❌ **NEVER DO:**
+1. **Don't expose stack traces** to clients
+2. **Don't include sensitive information** in error responses
+3. **Don't use generic error messages** - be specific
+4. **Don't ignore HTTP status codes** - use appropriate codes
+
+## 🛡️ **Validation Error Handling**
+
+### ✅ **MUST DO:**
+1. **Use class-validator** for input validation
+2. **Handle validation errors** with `BadRequestException`
+3. **Provide specific validation messages** for each field
+4. **Transform validation errors** to client-friendly format
+5. **Log validation failures** for monitoring
+
+### ❌ **NEVER DO:**
+1. **Don't skip validation** - always validate inputs
+2. **Don't expose validation internals** to clients
+3. **Don't ignore validation errors** - handle them properly
+4. **Don't use generic validation messages** - be specific
+
+## 🔄 **External API Error Handling**
+
+### ✅ **MUST DO:**
+1. **Handle network timeouts** gracefully
+2. **Implement retry logic** for transient failures
+3. **Use circuit breaker pattern** for external services
+4. **Log external API failures** with context
+5. **Provide fallback responses** when APIs are unavailable
+6. **Handle rate limiting** gracefully
+
+### ❌ **NEVER DO:**
+1. **Don't ignore external API errors** - always handle them
+2. **Don't expose external API details** to clients
+3. **Don't retry indefinitely** - implement proper retry limits
+4. **Don't forget to timeout** external API calls
+
+## 🗄️ **Database Error Handling**
+
+### ✅ **MUST DO:**
+1. **Handle connection errors** gracefully
+2. **Use transactions** for complex operations
+3. **Handle constraint violations** properly
+4. **Log database errors** with context
+5. **Implement proper rollback** mechanisms
+6. **Handle deadlocks** and retry logic
+
+### ❌ **NEVER DO:**
+1. **Don't expose database errors** to clients
+2. **Don't ignore constraint violations** - handle them
+3. **Don't forget to rollback** failed transactions
+4. **Don't use raw SQL** without proper error handling
+
+## 🧪 **Testing Error Scenarios**
+
+### ✅ **MUST DO:**
+1. **Test all error scenarios** in unit tests
+2. **Mock external API failures** in tests
+3. **Test validation error handling**
+4. **Test database error scenarios**
+5. **Verify error response formats**
+
+### ❌ **NEVER DO:**
+1. **Don't skip error case testing** - test all scenarios
+2. **Don't ignore edge cases** - test boundary conditions
+3. **Don't test only happy paths** - test error paths too
+4. **Don't forget to test error logging** - verify logs are created
+
+## 📊 **Error Monitoring**
+
+### ✅ **MUST DO:**
+1. **Monitor error rates** in production
+2. **Set up alerts** for critical errors
+3. **Track error patterns** and trends
+4. **Implement error reporting** to external services
+5. **Monitor performance** of error handling
+
+### ❌ **NEVER DO:**
+1. **Don't ignore error trends** - investigate patterns
+2. **Don't set up too many alerts** - focus on critical ones
+3. **Don't forget to monitor** error handling performance
+4. **Don't ignore user-reported errors** - investigate them
+description:
+globs:
+alwaysApply: false
+---

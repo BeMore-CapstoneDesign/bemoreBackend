@@ -1,0 +1,83 @@
+# BeMore Backend Project Structure & Architecture
+
+## 🏗️ **Project Overview**
+This is a **NestJS + TypeScript** backend for BeMore, an AI-powered multimodal emotion analysis and CBT feedback service.
+
+## 📁 **Critical File Structure**
+- **Entry Point**: [src/main.ts](mdc:src/main.ts) - Application bootstrap and global configuration
+- **Root Module**: [src/app.module.ts](mdc:src/app.module.ts) - Main module with all feature imports
+- **Database Schema**: [prisma/schema.prisma](mdc:prisma/schema.prisma) - PostgreSQL schema with User, Session, Message models
+- **Configuration**: [package.json](mdc:package.json) - Dependencies and scripts
+
+## 🎯 **Core Architecture Pattern**
+```
+Controller → Service → External API/Database
+    ↓           ↓              ↓
+  Request    Business Logic   Data Access
+```
+
+## 📂 **Module Organization**
+- **`src/modules/emotion/`** - Multimodal emotion analysis (facial, voice, text)
+- **`src/modules/cbt/`** - Cognitive Behavioral Therapy services
+- **`src/chat/`** - AI chat functionality with Gemini API
+- **`src/history/`** - Session history and PDF generation
+- **`src/services/`** - Shared services (Gemini, Context, Token Manager)
+- **`src/dto/`** - Data Transfer Objects for API validation
+
+## 🔧 **Technology Stack**
+- **Framework**: NestJS with TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **AI Service**: Google Gemini API (2.5-flash model)
+- **File Upload**: Multer with memory storage
+- **Validation**: class-validator with class-transformer
+
+## ⚠️ **CRITICAL RULES - MUST FOLLOW**
+
+### ✅ **DO:**
+1. **Always use NestJS decorators** (`@Controller`, `@Injectable`, `@Post`, `@Get`)
+2. **Follow kebab-case for files**: `facial-analysis.service.ts`
+3. **Use PascalCase for classes**: `FacialAnalysisService`
+4. **Implement proper error handling** with `HttpException`
+5. **Add comprehensive logging** with `Logger` service
+6. **Use DTOs for all API inputs** with validation decorators
+7. **Follow dependency injection pattern** in constructors
+8. **Return standardized response format**: `{ success: boolean, data: T }`
+
+### ❌ **NEVER DO:**
+1. **Don't use `any` type** - always define proper TypeScript interfaces
+2. **Don't bypass validation** - always use `class-validator` decorators
+3. **Don't hardcode API keys** - use environment variables
+4. **Don't ignore error handling** - always wrap in try-catch blocks
+5. **Don't use synchronous file operations** - always use async/await
+6. **Don't create circular dependencies** between modules
+7. **Don't expose sensitive data** in API responses
+8. **Don't skip logging** for critical operations
+
+## 🎨 **Code Style Standards**
+- **Single quotes** for strings (configured in [.prettierrc](mdc:.prettierrc))
+- **Trailing commas** for all objects and arrays
+- **2-space indentation** (TypeScript standard)
+- **Semicolons required** (ESLint configuration in [eslint.config.mjs](mdc:eslint.config.mjs))
+
+## 🔐 **Security Requirements**
+- **CORS enabled** for specific origins only
+- **Input validation** on all endpoints
+- **File type validation** for uploads
+- **Environment variable** for all secrets
+- **Rate limiting** consideration for AI API calls
+
+## 📊 **Database Patterns**
+- **Use Prisma Client** for all database operations
+- **Implement proper relations** between User, Session, Message
+- **Use JSON fields** for flexible emotion analysis data
+- **Include timestamps** (createdAt, updatedAt) on all models
+
+## 🧪 **Testing Strategy**
+- **Unit tests** for all services
+- **E2E tests** for critical API endpoints
+- **Test database** separate from development
+- **Mock external APIs** in tests
+description:
+globs:
+alwaysApply: false
+---

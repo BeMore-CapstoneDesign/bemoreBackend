@@ -1,0 +1,116 @@
+# AI Integration & Gemini API Development Standards
+
+## 🤖 **Gemini API Integration Patterns**
+
+### ✅ **MUST DO:**
+1. **Use ConfigService** for API key management
+2. **Implement proper error handling** for API failures
+3. **Add retry logic** for transient failures
+4. **Use proper model configuration**: `gemini-2.5-flash`
+5. **Implement fallback responses** when API is unavailable
+6. **Add comprehensive logging** for API calls
+7. **Use structured prompts** with clear instructions
+8. **Handle rate limiting** gracefully
+
+### ❌ **NEVER DO:**
+1. **Don't hardcode API keys** - use environment variables
+2. **Don't ignore API errors** - always handle failures
+3. **Don't use deprecated models** - stick to latest versions
+4. **Don't expose API keys** in logs or responses
+5. **Don't make synchronous API calls** - always use async/await
+
+## 📝 **Prompt Engineering Standards**
+
+### ✅ **MUST DO:**
+1. **Use structured prompt templates** in [src/services/prompt-engineering.service.ts](mdc:src/services/prompt-engineering.service.ts)
+2. **Include context and examples** in prompts
+3. **Specify output format** clearly
+4. **Add safety instructions** for sensitive content
+5. **Use consistent prompt structure** across services
+6. **Include error handling instructions** in prompts
+
+### ❌ **NEVER DO:**
+1. **Don't use vague prompts** - be specific and clear
+2. **Don't ignore prompt injection** - sanitize inputs
+3. **Don't use hardcoded prompts** - use template system
+4. **Don't forget to specify output format** - always define structure
+
+## 🔄 **Context Management**
+
+### ✅ **MUST DO:**
+1. **Use ContextService** for conversation history management
+2. **Implement token counting** to stay within limits
+3. **Truncate context** when it exceeds limits
+4. **Maintain conversation continuity** across sessions
+5. **Use proper context formatting** for AI consumption
+
+### ❌ **NEVER DO:**
+1. **Don't send unlimited context** - respect token limits
+2. **Don't ignore context relevance** - filter important information
+3. **Don't expose sensitive context** - sanitize before sending
+4. **Don't forget to handle context errors** - implement fallbacks
+
+## 🧠 **Emotion Analysis Integration**
+
+### ✅ **MUST DO:**
+1. **Use multimodal analysis** combining facial, voice, and text
+2. **Implement VAD (Valence, Arousal, Dominance) scoring**
+3. **Provide confidence scores** for analysis results
+4. **Generate CBT feedback** based on analysis
+5. **Handle multiple input modalities** gracefully
+6. **Use proper emotion classification** standards
+
+### ❌ **NEVER DO:**
+1. **Don't rely on single modality** - always consider multiple inputs
+2. **Don't ignore confidence scores** - handle low confidence cases
+3. **Don't make definitive diagnoses** - provide suggestions only
+4. **Don't ignore cultural context** in emotion analysis
+
+## 📊 **Response Processing**
+
+### ✅ **MUST DO:**
+1. **Parse structured responses** from AI
+2. **Validate response format** before processing
+3. **Handle malformed responses** gracefully
+4. **Transform responses** to match API format
+5. **Add response metadata** (confidence, processing time)
+
+### ❌ **NEVER DO:**
+1. **Don't trust raw AI responses** - always validate
+2. **Don't ignore parsing errors** - handle gracefully
+3. **Don't expose raw AI responses** - transform to DTOs
+4. **Don't forget to log response processing** - for debugging
+
+## 🔐 **Security & Privacy**
+
+### ✅ **MUST DO:**
+1. **Sanitize user inputs** before sending to AI
+2. **Implement content filtering** for sensitive topics
+3. **Log API usage** for monitoring and debugging
+4. **Handle sensitive data** according to privacy standards
+5. **Implement proper error messages** without exposing internals
+
+### ❌ **NEVER DO:**
+1. **Don't send sensitive data** to AI without sanitization
+2. **Don't log sensitive content** - use placeholders
+3. **Don't expose internal AI prompts** in responses
+4. **Don't ignore privacy regulations** - comply with standards
+
+## 🧪 **Testing AI Integration**
+
+### ✅ **MUST DO:**
+1. **Mock AI API calls** in unit tests
+2. **Test error scenarios** (API down, rate limiting)
+3. **Test prompt variations** and edge cases
+4. **Validate response parsing** logic
+5. **Test context management** functionality
+
+### ❌ **NEVER DO:**
+1. **Don't use real API calls** in tests
+2. **Don't ignore error case testing** - test all scenarios
+3. **Don't test AI responses directly** - test your processing logic
+4. **Don't skip integration tests** for critical AI features
+description:
+globs:
+alwaysApply: false
+---
