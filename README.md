@@ -1,20 +1,20 @@
 # BeMore Backend
 
-AI 기반 감정 분석 및 CBT 피드백 서비스의 백엔드 API 서버입니다.
+AI 기반 멀티모달 감정 분석 및 CBT 피드백 서비스의 백엔드 API 서버입니다.
 
 ## 🚀 프로젝트 개요
 
-BeMore는 Google Gemini AI를 활용하여 사용자의 감정을 분석하고, 인지행동치료(CBT) 기법을 제안하는 서비스입니다. 텍스트, 오디오, 이미지 등 다양한 미디어를 통해 감정을 분석하고, AI 상담사와의 대화를 통해 개인화된 피드백을 제공합니다.
+BeMore는 **VAD (Valence-Arousal-Dominance) 모델**을 기반으로 텍스트, 음성, 얼굴 표정을 통합 분석하여 사용자의 감정 상태를 정확하게 파악하고, 인지행동치료(CBT) 기법을 제안하는 서비스입니다.
 
 ## ✨ 주요 기능
 
-- **멀티모달 감정 분석**: 텍스트, 오디오, 이미지 기반 감정 분석
-- **AI 상담사**: Gemini 2.5-flash AI를 활용한 CBT 기반 상담
-- **세션 관리**: 대화 세션 생성 및 관리
-- **히스토리 조회**: 과거 분석 결과 및 대화 기록 조회
-- **PDF 리포트**: 세션별 상세 리포트 생성
-- **PostgreSQL 연동**: 안정적인 데이터 저장 및 관리
-- **Mock 응답 지원**: API 키 없이도 개발 환경에서 테스트 가능
+- **멀티모달 감정 분석**: 텍스트, 음성, 얼굴 표정 통합 분석
+- **VAD 모델 기반**: 과학적 감정 분석 (Valence-Arousal-Dominance)
+- **실시간 감정 분류**: 7가지 주요 감정 (happy, sad, angry, excited, surprised, calm, neutral)
+- **위험 신호 감지**: 자동 위험 수준 평가 및 권장사항 제공
+- **CBT 피드백**: 개인화된 인지행동치료 기법 제안
+- **세션 관리**: 대화 세션 생성 및 감정 변화 추적
+- **히스토리 조회**: 과거 분석 결과 및 감정 패턴 분석
 
 ## 🛠 기술 스택
 
@@ -23,24 +23,28 @@ BeMore는 Google Gemini AI를 활용하여 사용자의 감정을 분석하고, 
 - **AI**: Google Gemini 2.5-flash API
 - **Language**: TypeScript
 - **Validation**: class-validator, class-transformer
+- **File Upload**: Multer
 - **Authentication**: JWT (준비 중)
 
 ## 📋 API 엔드포인트
 
-### 채팅 API
-- `POST /api/chat/gemini` - AI 상담사와 대화
-
 ### 감정 분석 API
-- `POST /api/emotion/analyze` - 감정 분석
+- `POST /emotion/analyze/text` - 텍스트 감정 분석
+- `POST /emotion/analyze/facial` - 얼굴 표정 분석
+- `POST /emotion/analyze/voice` - 음성 톤 분석
+- `POST /emotion/analyze/multimodal` - 멀티모달 통합 분석
+
+### CBT 피드백 API
+- `POST /emotion/cbt/feedback` - CBT 피드백 생성
+- `POST /emotion/risk-assessment` - 위험 신호 감지
+- `GET /emotion/patterns/{sessionId}` - 감정 패턴 분석
 
 ### 히스토리 API
-- `GET /api/history/{userId}` - 세션 히스토리 조회
-- `POST /api/history/session/{sessionId}/pdf` - PDF 리포트 생성
+- `GET /emotion/history/{sessionId}` - 감정 분석 히스토리 조회
 
 ### 테스트 API
-- `GET /api/test/db-connection` - PostgreSQL 연결 테스트
-- `GET /api/test/users` - 사용자 목록 조회
-- `POST /api/test/users` - 사용자 생성
+- `POST /emotion/test/face-detection` - 얼굴 감지 테스트
+- `POST /emotion/test/audio-quality` - 음성 품질 평가
 
 자세한 API 문서는 [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)를 참조하세요.
 
@@ -123,36 +127,75 @@ npm run start:prod
 
 ```
 src/
-├── chat/           # 채팅 관련 모듈
+├── modules/
+│   ├── emotion/           # 감정 분석 모듈
+│   │   ├── controllers/
+│   │   │   └── emotion.controller.ts
+│   │   ├── services/
+│   │   │   ├── text-analysis.service.ts
+│   │   │   ├── facial-analysis.service.ts
+│   │   │   ├── voice-analysis.service.ts
+│   │   │   └── multimodal-analysis.service.ts
+│   │   └── emotion.module.ts
+│   └── cbt/              # CBT 피드백 모듈
+│       ├── services/
+│       │   └── psychological-analysis.service.ts
+│       └── cbt.module.ts
+├── chat/                 # 채팅 관련 모듈
 │   ├── chat.controller.ts
 │   ├── chat.service.ts
 │   └── chat.module.ts
-├── emotion/        # 감정 분석 모듈
-│   ├── emotion.controller.ts
-│   ├── emotion.service.ts
-│   └── emotion.module.ts
-├── history/        # 히스토리 관리 모듈
+├── history/              # 히스토리 관리 모듈
 │   ├── history.controller.ts
 │   ├── history.service.ts
 │   └── history.module.ts
-├── test/           # 테스트 API 모듈
-│   ├── test.controller.ts
-│   └── test.module.ts
-├── prisma/         # 데이터베이스 설정
+├── health/               # 헬스체크 모듈
+│   ├── health.controller.ts
+│   └── health.module.ts
+├── prisma/               # 데이터베이스 설정
 │   ├── prisma.service.ts
 │   └── prisma.module.ts
-├── services/       # 공통 서비스
-│   └── gemini.service.ts
-├── dto/           # 데이터 전송 객체
+├── services/             # 공통 서비스
+│   ├── gemini.service.ts
+│   ├── context.service.ts
+│   ├── prompt-engineering.service.ts
+│   └── token-manager.service.ts
+├── dto/                  # 데이터 전송 객체
 │   ├── chat.dto.ts
 │   ├── emotion.dto.ts
-│   └── history.dto.ts
-├── database/      # PostgreSQL 연결
-│   └── db.ts
+│   ├── history.dto.ts
+│   └── multimodal.dto.ts
+├── types/                # 타입 정의
+│   └── vad.types.ts
 ├── app.controller.ts
 ├── app.module.ts
 └── main.ts
 ```
+
+## 🧠 감정 분석 시스템
+
+### VAD 모델 (Valence-Arousal-Dominance)
+```typescript
+interface VADScore {
+  valence: number;    // 감정의 긍정성 (0-1)
+  arousal: number;    // 감정의 활성화 정도 (0-1)
+  dominance: number;  // 감정의 지배성 (0-1)
+}
+```
+
+### 감정 분류
+- **happy** (기쁨): valence > 0.7, arousal ≤ 0.6
+- **excited** (흥분): valence > 0.7, arousal > 0.6
+- **angry** (분노): valence ≤ 0.3, arousal > 0.6
+- **sad** (슬픔): valence ≤ 0.3, arousal ≤ 0.6
+- **surprised** (놀람): valence 0.4-0.7, arousal > 0.6
+- **calm** (평온): valence 0.4-0.7, arousal ≤ 0.6
+- **neutral** (중립): 기타
+
+### 멀티모달 통합 분석
+- **얼굴 표정**: 40% 가중치 (높은 신뢰도)
+- **음성 톤**: 35% 가중치 (중간 신뢰도)
+- **텍스트**: 25% 가중치 (낮은 신뢰도)
 
 ## 🔧 개발
 
@@ -179,21 +222,27 @@ npx prisma migrate dev --name <migration-name>
 `test-api.http` 파일을 사용하여 API를 테스트할 수 있습니다:
 
 ```bash
-# PostgreSQL 연결 테스트
-curl -X GET http://localhost:3000/api/test/db-connection
-
-# 사용자 목록 조회
-curl -X GET http://localhost:3000/api/test/users
-
-# AI 채팅 테스트 (Mock 응답)
-curl -X POST http://localhost:3000/api/chat/gemini \
+# 텍스트 감정 분석
+curl -X POST http://localhost:3000/emotion/analyze/text \
   -H "Content-Type: application/json" \
-  -d '{"message": "안녕하세요"}'
+  -d '{"text": "오늘 정말 기분이 좋아요!"}'
 
-# 감정 분석 테스트
-curl -X POST http://localhost:3000/api/emotion/analyze \
+# 얼굴 표정 분석
+curl -X POST http://localhost:3000/emotion/analyze/facial \
+  -F "image=@test_image.jpg"
+
+# 음성 톤 분석
+curl -X POST http://localhost:3000/emotion/analyze/voice \
+  -F "audio=@test_audio.wav"
+
+# 멀티모달 통합 분석
+curl -X POST http://localhost:3000/emotion/analyze/multimodal \
   -H "Content-Type: application/json" \
-  -d '{"text": "오늘 기분이 좋아요", "mediaType": "text"}'
+  -d '{
+    "text": {"content": "오늘 정말 기분이 좋아요!"},
+    "context": "일상 대화",
+    "sessionId": "session_123"
+  }'
 ```
 
 ### 단위 테스트
@@ -224,6 +273,7 @@ npm run test:cov
 
 - **환경 변수**: 민감한 정보는 `.env` 파일에 저장 (git에 커밋하지 않음)
 - **입력 검증**: class-validator를 통한 요청 데이터 검증
+- **파일 업로드**: 파일 크기 및 형식 제한
 - **CORS**: 프론트엔드 도메인 허용 설정
 - **에러 처리**: 상세한 에러 메시지 및 로깅
 
@@ -247,18 +297,29 @@ docker run -p 3000:3000 bemore-backend
 
 ## 🆕 최근 업데이트
 
-### v1.1.0 (2025-07-15)
-- ✅ **런타임 에러 해결**: Foreign key constraint 및 DB 세션 로직 수정
-- ✅ **Gemini 2.5-flash 모델**: 최신 AI 모델로 업그레이드
-- ✅ **Mock 응답 지원**: API 키 없이도 개발 환경에서 테스트 가능
-- ✅ **PostgreSQL 연동**: 안정적인 데이터베이스 연결 및 스키마 관리
-- ✅ **API 엔드포인트**: 채팅, 감정분석, 히스토리 API 정상 작동
+### v1.2.0 (2025-01-XX)
+- ✅ **멀티모달 감정 분석**: 텍스트, 음성, 얼굴 표정 통합 분석 구현
+- ✅ **VAD 모델**: 과학적 감정 분석 모델 적용
+- ✅ **감정 분류 시스템**: 7가지 주요 감정 자동 분류
+- ✅ **위험 신호 감지**: 자동 위험 수준 평가 및 권장사항
+- ✅ **CBT 피드백**: 개인화된 인지행동치료 기법 제안
+- ✅ **파일 업로드**: 이미지/오디오 파일 처리 및 검증
+- ✅ **API 엔드포인트**: 완전한 감정 분석 API 구현
 
 ### 개발 상태
-- 🟢 **백엔드 API**: 완료 및 테스트 완료
+- 🟢 **감정 분석 시스템**: 완료 및 테스트 완료
+- 🟢 **멀티모달 통합**: 완료 및 테스트 완료
+- 🟢 **CBT 피드백**: 완료 및 테스트 완료
 - 🟡 **프론트엔드 연동**: 진행 중
 - 🟡 **실제 Gemini API**: 테스트 필요
 - 🔴 **배포 자동화**: 준비 중
+
+## 📚 관련 문서
+
+- [API 문서](./API_DOCUMENTATION.md) - 상세한 API 명세
+- [프론트엔드 통합 가이드](./FRONTEND_INTEGRATION_GUIDE.md) - 프론트엔드 개발자를 위한 가이드
+- [아키텍처 문서](./ARCHITECTURE.md) - 시스템 아키텍처 설명
+- [프로젝트 구조](./PROJECT_STRUCTURE.md) - 상세한 프로젝트 구조
 
 ## 🤝 기여하기
 
